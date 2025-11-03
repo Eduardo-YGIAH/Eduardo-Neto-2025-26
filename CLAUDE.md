@@ -83,6 +83,10 @@ This is the first impression.
 
 The most important page: a gallery of anonymized projects. Each project has its own page.
 
+- **Card Design**: Elevated translucent cards to improve readability over the Vanta background
+  - Background: semi-transparent dark (`bg-black/45` → hover `bg-black/55`)
+  - Elevation: soft shadow (`shadow-lg shadow-black/40`) and subtle border (`border-white/10`)
+
 #### Case Study Page Template
 
 - **Project Title**: e.g., "Enterprise Financial Dashboard"
