@@ -33,7 +33,7 @@ export default function RootLayout({
         <main className="relative mx-auto max-w-6xl px-6 z-10">
           {children}
         </main>
-        <footer className="mt-24 border-t border-white/10 py-8">
+        <footer className="relative z-10 mt-24 border-t border-white/10 py-8">
           <div className="mx-auto max-w-6xl px-6 text-sm text-zinc-400 flex items-center justify-between">
             <span>© {new Date().getFullYear()} Eduardo Neto</span>
             <div className="flex items-center gap-4">
