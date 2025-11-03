@@ -2,25 +2,31 @@
 
 import React from "react";
 
-const NAME = "Eduardo Neto";
+const NAME = "EDUARDO NETO";
 
 export default function AnimatedHeroName() {
   const letters = NAME.split("");
   // Visual spacing per letter in SVG units
-  const letterSpacing = 56; // tune to taste for the chosen font size
+  const letterSpacing = 68;
   const startX = 0;
-  const baselineY = 60;
+  const baselineY = 96;
+
+  // Animation timings
+  const drawDuration = 1.2; // seconds per letter draw
+  const stagger = 0.18; // seconds between letters
+  const lastIndex = letters.length - 1;
+  const fillDelay = lastIndex * stagger + drawDuration + 0.3; // start fill after the last letter completes
 
   return (
     <div className="mx-auto mt-10 flex items-center justify-center">
       <svg
         role="img"
-        aria-label="Eduardo Neto"
-        className="h-24 w-[800px] max-w-full"
-        viewBox="0 0 900 120"
+        aria-label="EDUARDO NETO"
+        className="h-32 w-[1100px] max-w-full"
+        viewBox="0 0 1200 160"
         fill="none"
       >
-        <g textAnchor="start" fontSize="64" fontWeight={800} fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+        <g textAnchor="start" fontSize="96" fontWeight={900} fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
           {letters.map((ch, idx) => (
             <text
               key={idx}
@@ -28,10 +34,8 @@ export default function AnimatedHeroName() {
               y={baselineY}
               className="hero-letter"
               style={{
-                // 120ms stagger between letters
-                // draw: 0.6s, then fill: 0.2s after
-                // Using two animations with calculated delays per letter
-                animationDelay: `${idx * 0.12}s, ${idx * 0.12 + 0.65}s`,
+                // Stagger draw per letter; fill starts globally after all draw
+                animationDelay: `${idx * stagger}s, ${fillDelay}s`,
               } as React.CSSProperties}
             >
               {ch}
@@ -44,21 +48,21 @@ export default function AnimatedHeroName() {
             to { stroke-dashoffset: 0; }
           }
           @keyframes hero-fill {
-            to { fill-opacity: 1; }
+            to { fill-opacity: 0.35; }
           }
           .hero-letter {
             stroke: #ff8820;
-            stroke-width: 2.5;
+            stroke-width: 3.5;
             stroke-linecap: round;
             stroke-linejoin: round;
-            stroke-dasharray: 300;
-            stroke-dashoffset: 300;
-            fill: #ffffff;
+            stroke-dasharray: 420;
+            stroke-dashoffset: 420;
+            fill: #ff8820;
             fill-opacity: 0;
             /* Two animations: draw then fill, with per-letter stagger via animation-delay list */
             animation-name: hero-draw, hero-fill;
-            animation-duration: 0.6s, 0.2s;
-            animation-timing-function: ease, ease;
+            animation-duration: ${drawDuration}s, 0.4s;
+            animation-timing-function: ease-out, ease;
             animation-fill-mode: forwards, forwards;
           }
         `}</style>

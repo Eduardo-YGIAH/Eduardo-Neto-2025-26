@@ -69,8 +69,8 @@ This is the first impression.
 
 - **Load-in Animation**:
   - Blank dark background
-  - "Eduardo Neto" animates in the center with an SVG line-drawing effect: each letter draws from left to right using stroke-dash animation (orange accent)
-  - After the wireframe is complete, the name fills to white
+  - "EDUARDO NETO" animates in the center with an SVG line-drawing effect: each letter draws left→right with a stagger; the entire name fills only after all letters complete
+  - Fill color matches the orange stroke with slight transparency (no pure white fill)
 - **Hero Layout (post-animation)**:
   - "Eduardo Neto" hero remains centered at the top of the content area
   - Vanta.js "dots" renders as a fixed background wave at the bottom of the screen (behind content)
