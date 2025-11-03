@@ -1,10 +1,11 @@
 import Link from "next/link";
+import AnimatedHeroName from "./components/AnimatedHeroName";
 
 export default function Home() {
   return (
     <div className="py-16">
       <section className="mt-10 flex flex-col items-center text-center">
-        <h1 className="text-5xl font-extrabold tracking-tight text-white">Eduardo Neto</h1>
+        <AnimatedHeroName />
         <p className="mt-4 max-w-2xl text-lg text-zinc-300">
           Front-End Engineer, ready for Senior level roles. I ship accessible,
           high-performance React apps with modern TypeScript, smart state
