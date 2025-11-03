@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#222222] text-white antialiased">
+      <body className="min-h-screen bg-[#222222] text-white antialiased flex flex-col">
         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#222222]/90 backdrop-blur">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="text-lg font-semibold text-[#ff8820]">
@@ -30,7 +30,7 @@ export default function RootLayout({
           </nav>
         </header>
         <VantaDots />
-        <main className="relative mx-auto max-w-6xl px-6 z-10">
+        <main className="relative z-10 mx-auto max-w-6xl px-6 flex-1">
           {children}
         </main>
         <footer className="relative z-10 mt-24 border-t border-white/10 py-8">
