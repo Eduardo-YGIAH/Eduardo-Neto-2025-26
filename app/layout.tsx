@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
+import VantaDots from "./components/VantaDots";
 
 export const metadata: Metadata = {
   title: "Eduardo Neto — Front-End Engineer",
@@ -28,7 +29,8 @@ export default function RootLayout({
             </ul>
           </nav>
         </header>
-        <main className="mx-auto max-w-6xl px-6">
+        <VantaDots />
+        <main className="relative mx-auto max-w-6xl px-6 z-10">
           {children}
         </main>
         <footer className="mt-24 border-t border-white/10 py-8">

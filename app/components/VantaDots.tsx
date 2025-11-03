@@ -1,23 +1,27 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 export default function VantaDots() {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const effectRef = useRef<any>(null);
+  type VantaInstance = { destroy?: () => void } | null;
+  const effectRef = useRef<VantaInstance>(null);
 
   useEffect(() => {
-    let canceled = false;
+    if (!containerRef.current) return;
+    if (effectRef.current) return; // avoid double-init in Strict Mode
+
+    // Ensure window.THREE exists BEFORE importing the Vanta effect
+    (globalThis as unknown as { THREE?: typeof THREE }).THREE = THREE;
+
+    let disposed = false;
     (async () => {
       try {
-        const [{ default: DOTS }, THREE] = await Promise.all([
-          import("vanta/dist/vanta.dots.min"),
-          import("three"),
-        ]);
-        if (canceled || !containerRef.current) return;
+        const { default: DOTS } = await import("vanta/dist/vanta.dots.min");
+        if (disposed || !containerRef.current || effectRef.current) return;
         effectRef.current = DOTS({
           el: containerRef.current,
-          THREE,
           mouseControls: true,
           touchControls: true,
           gyroControls: false,
@@ -30,23 +34,33 @@ export default function VantaDots() {
           color2: 0xff8820,
           size: 3.0,
           spacing: 35.0,
-          showLines: true,
+          showLines: false,
         });
       } catch {
-        // fails gracefully if deps not installed yet
+        // allow page to render without animation if Vanta fails
+        effectRef.current = null;
       }
     })();
+
     return () => {
-      canceled = true;
-      if (effectRef.current) {
-        effectRef.current.destroy?.();
+      disposed = true;
+      try {
+        if (effectRef.current) {
+          effectRef.current.destroy?.();
+        }
+      } catch {
+        // Swallow DOM cleanup race conditions in dev
+      } finally {
         effectRef.current = null;
       }
     };
   }, []);
 
   return (
-    <div ref={containerRef} className="h-48 w-full rounded-lg border border-white/10" />
+    <div
+      ref={containerRef}
+      className="pointer-events-none fixed bottom-0 left-0 right-0 z-0 h-[320px] w-full md:h-[420px]"
+    />
   );
 }
 

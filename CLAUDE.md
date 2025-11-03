@@ -44,7 +44,9 @@ Clean, modern, professional; aligns with the provided visual direction.
 ### Background Animation (Vanta.js)
 
 - **Effect**: `dots`
-- **Persistence**: Persistent on every page, positioned below main navigation and headers for readability
+- **Persistence**: Persistent on every page as a background element
+- **Positioning**: Fixed to the bottom of the viewport, full screen width; content layers above
+- **Appearance**: Dots-wave only (no connecting lines)
 - **Parameters**:
   - `effect: 'dots'`
   - `backgroundColor: 0x222222`
@@ -52,7 +54,7 @@ Clean, modern, professional; aligns with the provided visual direction.
   - `color2: 0xff8820`
   - `size: 3`
   - `spacing: 35`
-  - `showLines: true`
+  - `showLines: false`
 
 ## 3) Page-by-Page Structure
 
@@ -71,7 +73,7 @@ This is the first impression.
   - After 1–2s pause, the SVG text fills with the orange color
 - **Hero Layout (post-animation)**:
   - "Eduardo Neto" hero remains centered at the top of the content area
-  - Vanta.js "dots" is in a separate container below the hero (not behind) for readability
+  - Vanta.js "dots" renders as a fixed background wave at the bottom of the screen (behind content)
 - **Content**:
   - **Tagline**: CV profile summary — "Front-End Engineer, ready for Senior level roles..."
   - **Case Study Links**: Three high-impact cards (e.g., "Financial Services App", "Commercial Banking Tool", "Internal

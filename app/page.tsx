@@ -1,5 +1,4 @@
 import Link from "next/link";
-import VantaDots from "./components/VantaDots";
 
 export default function Home() {
   return (
@@ -14,9 +13,6 @@ export default function Home() {
       </section>
 
       {/* Vanta.js dots container sits below hero for readability */}
-      <section className="mt-12">
-        <VantaDots />
-      </section>
 
       <section className="mt-16">
         <h2 className="text-xl font-semibold text-[#ff8820]">Featured Case Studies</h2>
