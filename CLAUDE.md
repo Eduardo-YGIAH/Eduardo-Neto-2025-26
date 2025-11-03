@@ -45,7 +45,7 @@ Clean, modern, professional; aligns with the provided visual direction.
 
 - **Effect**: `dots`
 - **Persistence**: Persistent on every page as a background element
-- **Positioning**: Fixed to the bottom of the viewport, full screen width; content layers above
+- **Positioning**: Fixed full-screen background (covers entire viewport); wave base visually at the bottom; content layers above
 - **Appearance**: Dots-wave only (no connecting lines)
 - **Parameters**:
   - `effect: 'dots'`

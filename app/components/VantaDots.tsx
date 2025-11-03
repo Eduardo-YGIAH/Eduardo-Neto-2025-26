@@ -59,7 +59,7 @@ export default function VantaDots() {
   return (
     <div
       ref={containerRef}
-      className="pointer-events-none fixed bottom-0 left-0 right-0 z-0 h-[320px] w-full md:h-[420px]"
+      className="pointer-events-none fixed inset-0 z-0 h-full w-full"
     />
   );
 }
