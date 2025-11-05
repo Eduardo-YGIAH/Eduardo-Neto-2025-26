@@ -130,3 +130,63 @@ Demonstrates senior-level communication and thought leadership.
 
 - Simple, clean page with links to LinkedIn and GitHub
 - Optional simple contact form
+
+## Implementation Snapshot — 2025-11-05
+
+### Global Layout & Branding
+
+- **Persistent navigation + footer** live in `app/layout.tsx`, delivering the sticky header, quick links, and footer CTA specified in the plan.
+- **Vanta dots background** is implemented via the client component `app/components/VantaDots.tsx`, importing `three` + `vanta` and matching the prescribed parameters.
+- **Hero typography & animation** use the custom `Monoton` font stored in `public/fonts/` and orchestrated by `app/components/AnimatedHeroName.tsx`, which parses glyphs with `opentype.js` to drive the SVG line-drawing sequence. Supporting animation classes live in `app/globals.css`.
+
+### Home Experience
+
+- `app/page.tsx` keeps the hero centered after the intro animation, uses the animated name component, and applies staggered entry animations for the tagline and case-study cards (see CSS hooks in `app/globals.css`).
+- Featured case-study CTA data mirrors the plan’s three flagship projects with direct links into the detailed write-ups.
+
+### Case Studies
+
+- `app/case-studies/page.tsx` renders the translucent card grid with hover elevation as described.
+- Each individual page (financial-services, commercial-banking, internal-project, retail-travel) builds the Problem/Solution/Outcome narrative and now links into relevant interactive demos under `/demos/*` for further proof.
+
+### Blog
+
+- `app/blog/posts.ts` centralizes post metadata (cover art, tags, reading time, “coming soon” flags).
+- `app/blog/page.tsx` ships the gallery layout with responsive images (remote patterns configured in `next.config.ts`) and badge styling per plan.
+- `app/blog/[slug]/page.tsx` delivers statically generated articles. The RTK Query deep dive is fully written; remaining slugs currently render “write-up in progress” placeholders.
+
+### About & Contact
+
+- `app/about/page.tsx` covers the sommelier-to-engineer arc, provides the CV download, and enumerates core skills.
+- `app/contact/page.tsx` lists actionable LinkedIn/GitHub links with room for a future form.
+
+### Interactive Demos
+
+- `/demos` introduces the “Portfolio as Demo” section with tabbed subpages. The RTK Query caching demo is complete with mirrored naive vs optimized implementations, live network metrics, and mutation flows (`demos/rtk-query/*`). Rendering performance and component library tabs currently show placeholders noting upcoming work.
+- Shared UI primitives live in `app/components/demos/` (tab navigation, metric badges, render counters, Prism-powered code panes).
+- The demo code references real data via RTK Query slices and records metrics through `lib/metrics/networkTracker.ts` + `lib/metrics/useRenderCount.ts`.
+
+### API Layer & Data
+
+- `app/api/demos/items/route.ts` and `[id]/route.ts` provide filterable list data with configurable latency/error simulation, powering all demos without exposing sensitive client data.
+- `app/api/demos/items/data.ts` seeds deterministic sample data in memory.
+
+### Tooling & Testing
+
+- `package.json` adds `@reduxjs/toolkit`, `react-redux`, `opentype.js`, `three`, `vanta`, `prismjs`, `diff`, and Vitest-related libs, alongside new `test` scripts.
+- `vitest.config.mts` scopes tests to the demo suite with coverage reporting and an alias for `@/`.
+- `demos/rtk-query/__tests__/itemsApi.test.ts` validates request de-duplication, cache invalidation, and TTL behaviour against the RTK Query slice.
+
+### Types, Assets, & Config
+
+- Custom `.d.ts` shims in `types/` cover `opentype.js`, `prismjs`, `vanta`, `three`, and vitest diff helpers.
+- `next.config.ts` whitelists Cloudinary hosts for remote blog artwork.
+- `public/fonts/` stores Monoton + Montserrat weights referenced across typography.
+
+### Outstanding Follow-Ups
+
+- Replace placeholder demo tabs for rendering performance and the component library with full implementations (including code/tests snapshots).
+- Flesh out the three remaining blog posts and wire subscription mechanics if desired.
+- Update footer and contact links with final GitHub/LinkedIn URLs plus the public “View Source” repository link.
+- Enhance About with richer storytelling sections once case-study screenshots are ready.
+- Consider adding the optional contact form and ensuring CV download assets live in `public/`.

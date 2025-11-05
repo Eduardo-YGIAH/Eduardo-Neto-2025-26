@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@vitest/utils/diff": ["./types/vitest-utils-diff.d.ts"]
     }
   },
   "include": [

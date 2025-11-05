@@ -25,6 +25,15 @@ export default function RetailTravelCaseStudy() {
         <h2 className="text-xl font-semibold text-[#ff8820]">3. The Outcome</h2>
         <p className="text-zinc-300">Predictable rollouts and data-backed UX decisions; improved maintainability.</p>
       </section>
+
+      <div className="mt-10 flex flex-wrap gap-3">
+        <a
+          href="/demos"
+          className="rounded-md bg-[#ff8820] px-4 py-2 text-sm font-medium text-black hover:brightness-110"
+        >
+          Explore interactive demos
+        </a>
+      </div>
     </article>
   );
 }

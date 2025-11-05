@@ -25,6 +25,21 @@ export default function CommercialBankingCaseStudy() {
         <h2 className="text-xl font-semibold text-[#ff8820]">3. The Outcome</h2>
         <p className="text-zinc-300">Stakeholder approval via demo; measurable ~25% reduction in development time across squads.</p>
       </section>
+
+      <div className="mt-10 flex flex-wrap gap-3">
+        <a
+          href="/demos/component-library"
+          className="rounded-md bg-[#ff8820] px-4 py-2 text-sm font-medium text_black text-black hover:brightness-110"
+        >
+          See it in action — Component Library
+        </a>
+        <a
+          href="/demos"
+          className="rounded-md border border-white/10 px-4 py-2 text-sm text-zinc-200 hover:bg-white/10"
+        >
+          All demos
+        </a>
+      </div>
     </article>
   );
 }
