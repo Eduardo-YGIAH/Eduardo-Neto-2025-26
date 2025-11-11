@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = { title: "Commercial Banking Client — Case Study" };
 
 export default function CommercialBankingCaseStudy() {
@@ -27,18 +29,18 @@ export default function CommercialBankingCaseStudy() {
       </section>
 
       <div className="mt-10 flex flex-wrap gap-3">
-        <a
+        <Link
           href="/demos/component-library"
           className="rounded-md bg-[#ff8820] px-4 py-2 text-sm font-medium text_black text-black hover:brightness-110"
         >
           See it in action — Component Library
-        </a>
-        <a
+        </Link>
+        <Link
           href="/demos"
           className="rounded-md border border-white/10 px-4 py-2 text-sm text-zinc-200 hover:bg-white/10"
         >
           All demos
-        </a>
+        </Link>
       </div>
     </article>
   );
