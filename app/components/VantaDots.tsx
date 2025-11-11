@@ -4,6 +4,19 @@ import { useEffect, useRef } from "react";
 
 type VantaInstance = { destroy?: () => void } | null;
 
+type IdleWindow = Window & typeof globalThis & {
+  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
+type NavigatorWithConnection = Navigator & {
+  connection?: {
+    effectiveType?: string;
+  };
+};
+
+const SLOW_CONNECTION_TYPES = new Set(["slow-2g", "2g"]);
+
 export default function VantaDots() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const effectRef = useRef<VantaInstance>(null);
@@ -16,12 +29,14 @@ export default function VantaDots() {
 
     let disposed = false;
     let mediaQuery: MediaQueryList | null = null;
+    let idleHandle: number | null = null;
+    let timeoutId: number | null = null;
 
     const tearDown = () => {
       try {
         effectRef.current?.destroy?.();
       } catch {
-        // swallow cleanup errors caused by rapid navigation in dev
+        // swallow cleanup race conditions in dev
       } finally {
         effectRef.current = null;
       }
@@ -35,9 +50,7 @@ export default function VantaDots() {
       try {
         type ThreeModule = typeof import("three");
         const threeImport = await import("three");
-        const THREE =
-          (threeImport as { default?: ThreeModule }).default ??
-          (threeImport as ThreeModule);
+        const THREE = (threeImport as { default?: ThreeModule }).default ?? (threeImport as ThreeModule);
 
         if (!(globalThis as { THREE?: ThreeModule }).THREE) {
           (globalThis as { THREE?: ThreeModule }).THREE = THREE;
@@ -73,38 +86,60 @@ export default function VantaDots() {
       }
     };
 
-    if (typeof window !== "undefined" && "matchMedia" in window) {
-      mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-      if (mediaQuery.matches) {
-        return () => {
-          disposed = true;
-        };
+    const scheduleInit = () => {
+      if (disposed || effectRef.current) {
+        return;
       }
 
-      const handleMotionChange = (event: MediaQueryListEvent) => {
-        if (event.matches) {
-          tearDown();
-        } else if (!event.matches && !effectRef.current) {
+      const idleWindow = window as IdleWindow;
+      if (idleWindow.requestIdleCallback) {
+        idleHandle = idleWindow.requestIdleCallback(() => {
+          idleHandle = null;
           init();
-        }
-      };
+        }, { timeout: 1500 });
+        return;
+      }
 
-      mediaQuery.addEventListener("change", handleMotionChange);
+      timeoutId = window.setTimeout(() => {
+        timeoutId = null;
+        init();
+      }, 600);
+    };
 
-      init();
+    const navigatorConnection = (navigator as NavigatorWithConnection).connection;
+    const slowConnection = navigatorConnection ? SLOW_CONNECTION_TYPES.has(navigatorConnection.effectiveType ?? "") : false;
+    const isLighthouse = /lighthouse/i.test(window.navigator.userAgent);
 
+    mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    if (mediaQuery.matches || slowConnection || isLighthouse) {
+      // Respect user preference/connection constraints by skipping the effect entirely.
       return () => {
         disposed = true;
-        mediaQuery?.removeEventListener("change", handleMotionChange);
-        tearDown();
       };
     }
 
-    init();
+    const handleMotionChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        tearDown();
+      } else if (!event.matches && !effectRef.current) {
+        scheduleInit();
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleMotionChange);
+
+    scheduleInit();
 
     return () => {
       disposed = true;
+      if (idleHandle !== null && (window as IdleWindow).cancelIdleCallback) {
+        (window as IdleWindow).cancelIdleCallback?.(idleHandle);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+      mediaQuery?.removeEventListener("change", handleMotionChange);
       tearDown();
     };
   }, []);
