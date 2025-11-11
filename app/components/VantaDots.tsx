@@ -1,25 +1,54 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import * as THREE from "three";
+
+type VantaInstance = { destroy?: () => void } | null;
 
 export default function VantaDots() {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  type VantaInstance = { destroy?: () => void } | null;
   const effectRef = useRef<VantaInstance>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    if (effectRef.current) return; // avoid double-init in Strict Mode
-
-    // Ensure window.THREE exists BEFORE importing the Vanta effect
-    (globalThis as unknown as { THREE?: typeof THREE }).THREE = THREE;
+    const element = containerRef.current;
+    if (!element || effectRef.current) {
+      return;
+    }
 
     let disposed = false;
-    (async () => {
+    let mediaQuery: MediaQueryList | null = null;
+
+    const tearDown = () => {
       try {
+        effectRef.current?.destroy?.();
+      } catch {
+        // swallow cleanup errors caused by rapid navigation in dev
+      } finally {
+        effectRef.current = null;
+      }
+    };
+
+    const init = async () => {
+      if (disposed || effectRef.current || !containerRef.current) {
+        return;
+      }
+
+      try {
+        type ThreeModule = typeof import("three");
+        const threeImport = await import("three");
+        const THREE =
+          (threeImport as { default?: ThreeModule }).default ??
+          (threeImport as ThreeModule);
+
+        if (!(globalThis as { THREE?: ThreeModule }).THREE) {
+          (globalThis as { THREE?: ThreeModule }).THREE = THREE;
+        }
+
         const { default: DOTS } = await import("vanta/dist/vanta.dots.min");
-        if (disposed || !containerRef.current || effectRef.current) return;
+
+        if (disposed || effectRef.current || !containerRef.current) {
+          return;
+        }
+
         effectRef.current = DOTS({
           el: containerRef.current,
           mouseControls: true,
@@ -36,23 +65,47 @@ export default function VantaDots() {
           spacing: 35.0,
           showLines: false,
         });
-      } catch {
-        // allow page to render without animation if Vanta fails
+      } catch (error) {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("Failed to initialise Vanta background", error);
+        }
         effectRef.current = null;
       }
-    })();
+    };
+
+    if (typeof window !== "undefined" && "matchMedia" in window) {
+      mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      if (mediaQuery.matches) {
+        return () => {
+          disposed = true;
+        };
+      }
+
+      const handleMotionChange = (event: MediaQueryListEvent) => {
+        if (event.matches) {
+          tearDown();
+        } else if (!event.matches && !effectRef.current) {
+          init();
+        }
+      };
+
+      mediaQuery.addEventListener("change", handleMotionChange);
+
+      init();
+
+      return () => {
+        disposed = true;
+        mediaQuery?.removeEventListener("change", handleMotionChange);
+        tearDown();
+      };
+    }
+
+    init();
 
     return () => {
       disposed = true;
-      try {
-        if (effectRef.current) {
-          effectRef.current.destroy?.();
-        }
-      } catch {
-        // Swallow DOM cleanup race conditions in dev
-      } finally {
-        effectRef.current = null;
-      }
+      tearDown();
     };
   }, []);
 
