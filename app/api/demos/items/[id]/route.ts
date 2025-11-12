@@ -5,10 +5,10 @@ function delay(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
-type RouteContext = { params: Promise<{ id: string }> };
+type RouteParams = Promise<{ id: string }>;
 
-export async function PUT(req: NextRequest, context: RouteContext) {
-  const { id } = await context.params;
+export async function PUT(req: NextRequest, { params }: { params: RouteParams }) {
+  const { id } = await params;
   const { searchParams } = new URL(req.url);
   const latency = Number(searchParams.get("delay") ?? 400);
   await delay(latency);
