@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { blogPosts } from "./posts";
+import { buildCloudinaryUrl, CLOUDINARY_BLUR_DATA_URL } from "@/lib/cloudinary";
 
 export const metadata = { title: "Blog — Eduardo Neto" };
 
@@ -22,8 +23,14 @@ export default function Blog() {
       </p>
 
       <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {blogPosts.map((post) => {
+        {blogPosts.map((post, idx) => {
           const href = `/blog/${post.slug}`;
+          const hasImage = Boolean(post.image?.src);
+          const isFeatured = idx === 0;
+          const optimizedImage =
+            hasImage && post.image
+              ? buildCloudinaryUrl(post.image.src, { width: 880, quality: 70 })
+              : undefined;
 
           return (
             <Link
@@ -34,12 +41,14 @@ export default function Blog() {
               <div className="relative aspect-[16/9] w-full overflow-hidden">
                 {post.image ? (
                   <Image
-                    src={post.image.src}
+                    src={optimizedImage ?? post.image.src}
                     alt={post.image.alt}
                     fill
                     sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    priority={post.slug === blogPosts[0].slug}
+                    priority={isFeatured}
+                    placeholder="blur"
+                    blurDataURL={CLOUDINARY_BLUR_DATA_URL}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2d2d2d] via-[#1f1f1f] to-[#161616] text-sm font-medium text-zinc-500">

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = { title: "Internal Project — Case Study" };
 
 export default function InternalProjectCaseStudy() {
@@ -27,12 +29,12 @@ export default function InternalProjectCaseStudy() {
       </section>
 
       <div className="mt-10 flex flex-wrap gap-3">
-        <a
+        <Link
           href="/demos"
           className="rounded-md bg-[#ff8820] px-4 py-2 text-sm font-medium text-black hover:brightness-110"
         >
           Explore interactive demos
-        </a>
+        </Link>
       </div>
     </article>
   );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import AnimatedHeroName from "./components/AnimatedHeroName";
+import HeroName from "./components/HeroName";
 import { HERO_ANIMATION_DURATION } from "@/lib/heroAnimation";
 
 const HERO_SUBTEXT_FADE_DURATION = 0.6;
@@ -8,9 +8,6 @@ const HERO_CARD_SLIDE_DURATION = 0.45;
 const HERO_CARD_STAGGER = 0.18;
 
 export default function Home() {
-  const headingDelay = HERO_ANIMATION_DURATION + HERO_SUBTEXT_FADE_DURATION;
-  const cardsDelayStart = headingDelay + HERO_HEADING_SLIDE_DURATION;
-
   const caseStudies = [
     {
       href: "/case-studies/financial-services",
@@ -29,10 +26,15 @@ export default function Home() {
     },
   ];
 
+  const headingDelay = HERO_ANIMATION_DURATION + HERO_SUBTEXT_FADE_DURATION;
+  const cardsDelayStart = headingDelay + HERO_HEADING_SLIDE_DURATION;
+  const lastCardDelay = cardsDelayStart + (caseStudies.length - 1) * HERO_CARD_STAGGER;
+  const heroUnlockDelayMs = Math.round((lastCardDelay + HERO_CARD_SLIDE_DURATION + 0.2) * 1000);
+
   return (
     <div className="py-16">
       <section className="mt-10 flex flex-col items-center text-center">
-        <AnimatedHeroName />
+        <HeroName unlockDelayMs={heroUnlockDelayMs} />
         <p
           className="hero-subtext mt-4 max-w-2xl text-lg text-zinc-300"
           style={{
@@ -40,7 +42,7 @@ export default function Home() {
             animationDuration: `${HERO_SUBTEXT_FADE_DURATION}s`,
           }}
         >
-          Front-End Engineer, ready for Senior level roles. I ship accessible,
+          I ship accessible,
           high-performance React apps with modern TypeScript, smart state
           management, and a strong UX mindset.
         </p>

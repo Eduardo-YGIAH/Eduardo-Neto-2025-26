@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { blogPosts, getPostBySlug } from "../posts";
 import { type JSX } from "react";
+import { buildCloudinaryUrl, CLOUDINARY_BLUR_DATA_URL } from "@/lib/cloudinary";
 
 function formatDate(input: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -271,6 +272,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   const renderArticle = articleBySlug[post.slug];
   const articleContent = renderArticle ? renderArticle() : null;
+  const optimizedHero = post.image ? buildCloudinaryUrl(post.image.src, { width: 1400, quality: 75 }) : undefined;
+  const isFlagship = post.slug === blogPosts[0]?.slug;
 
   return (
     <div className="py-12">
@@ -313,12 +316,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-lg shadow-black/40">
                 <div className="relative aspect-[16/9] w-full">
                   <Image
-                    src={post.image.src}
+                    src={optimizedHero ?? post.image.src}
                     alt={post.image.alt}
                     fill
                     sizes="(min-width: 1280px) 60vw, (min-width: 1024px) 70vw, 100vw"
                     className="h-full w-full object-cover"
-                    priority
+                    priority={isFlagship}
+                    placeholder="blur"
+                    blurDataURL={CLOUDINARY_BLUR_DATA_URL}
                   />
                 </div>
               </div>
