@@ -64,12 +64,20 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Verify build output
+        run: |
+          if [ ! -d ".next" ]; then
+            echo "::error::Build completed but .next directory was not created"
+            exit 1
+          fi
+          echo ".next directory exists with $(find .next -type f | wc -l) files"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: .next
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 1
 
   lighthouse:
