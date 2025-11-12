@@ -1,28 +1,22 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo } from "react";
+
+const renderCounters = new WeakMap<object, number>();
 
 /**
  * useRenderCount returns an incrementing counter for how many times the component rendered.
  * Useful for visualizing rendering optimizations in demos.
  */
 export function useRenderCount(initial: number = 0): number {
-  const [count, setCount] = useState(initial);
-  const isInternalUpdate = useRef(false);
+  const key = useMemo<object>(() => ({}), []);
+  const previous = renderCounters.get(key);
+  const next = (previous ?? initial) + 1;
 
   useLayoutEffect(() => {
-    if (isInternalUpdate.current) {
-      isInternalUpdate.current = false;
-      return;
-    }
+    renderCounters.set(key, next);
+    return () => {
+      renderCounters.delete(key);
+    };
+  }, [key, next]);
 
-    isInternalUpdate.current = true;
-    const frame = requestAnimationFrame(() => {
-      setCount((prev) => prev + 1);
-    });
-
-    return () => cancelAnimationFrame(frame);
-  });
-
-  return count;
+  return next;
 }
-
-
