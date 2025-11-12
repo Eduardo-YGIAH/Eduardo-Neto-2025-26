@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = { title: "Financial Services Firm — Case Study" };
 
 export default function FinancialServicesCaseStudy() {
@@ -27,24 +29,24 @@ export default function FinancialServicesCaseStudy() {
       </section>
 
       <div className="mt-10 flex flex-wrap gap-3">
-        <a
+        <Link
           href="/demos/rtk-query-caching"
           className="rounded-md bg-[#ff8820] px-4 py-2 text-sm font-medium text-black hover:brightness-110"
         >
           See it in action — RTK Query Caching
-        </a>
-        <a
+        </Link>
+        <Link
           href="/demos/rendering-performance"
           className="rounded-md border border-white/10 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
         >
           Rendering Performance Demo
-        </a>
-        <a
+        </Link>
+        <Link
           href="/demos"
           className="rounded-md border border-white/10 px-4 py-2 text-sm text-zinc-200 hover:bg-white/10"
         >
           All demos
-        </a>
+        </Link>
       </div>
     </article>
   );

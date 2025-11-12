@@ -1,0 +1,44 @@
+{
+    "ci": {
+        "collect": {
+            "numberOfRuns": 3,
+            "startServerCommand": "PORT=3111 npm start",
+            "startServerReadyPattern": "started server on",
+            "url": [
+                "http://localhost:3111",
+                "http://localhost:3111/blog",
+                "http://localhost:3111/blog/mock-server-cut-blockers",
+                "http://localhost:3111/case-studies",
+                "http://localhost:3111/about"
+            ]
+        },
+        "assert": {
+            "assertions": {
+                "categories:performance": [
+                    "error",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:accessibility": [
+                    "error",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:best-practices": [
+                    "error",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:seo": [
+                    "error",
+                    {
+                        "minScore": 0.9
+                    }
+                ]
+            }
+        }
+    }
+}
