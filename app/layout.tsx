@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-[#222222] text-white antialiased flex flex-col">
         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#222222]/90 backdrop-blur">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -31,11 +31,11 @@ export default function RootLayout({
         </header>
         <VantaDots />
         <main className="relative z-10 mx-auto max-w-6xl px-6 flex-1">
-          {children}
+          { children }
         </main>
         <footer className="relative z-10 mt-24 border-t border-white/10 py-8">
           <div className="mx-auto max-w-6xl px-6 text-sm text-zinc-400 flex items-center justify-between">
-            <span>© {new Date().getFullYear()} Eduardo Neto</span>
+            <span>© { new Date().getFullYear() } Eduardo Neto</span>
             <div className="flex items-center gap-4">
               <a className="hover:text-white" href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
               <a className="hover:text-white" href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
