@@ -15,7 +15,7 @@ type NavigatorWithConnection = Navigator & {
   };
 };
 
-const SLOW_CONNECTION_TYPES = new Set(["slow-2g", "2g"]);
+const SLOW_CONNECTION_TYPES = new Set([ "slow-2g", "2g" ]);
 
 export default function VantaDots() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -92,6 +92,11 @@ export default function VantaDots() {
       }
 
       const idleWindow = window as IdleWindow;
+      // Disable on mobile devices to avoid high TBT (Total Blocking Time)
+      if (window.innerWidth < 600) {
+        return;
+      }
+
       if (idleWindow.requestIdleCallback) {
         idleHandle = idleWindow.requestIdleCallback(() => {
           idleHandle = null;
@@ -146,7 +151,7 @@ export default function VantaDots() {
 
   return (
     <div
-      ref={containerRef}
+      ref={ containerRef }
       className="pointer-events-none fixed inset-0 z-0 h-full w-full"
     />
   );
