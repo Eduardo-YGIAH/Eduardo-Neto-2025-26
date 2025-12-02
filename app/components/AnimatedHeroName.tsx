@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { HERO_LAYOUT } from "./HeroNamePaths";
 
-const DRAW_DURATION = 2.0;
+const DRAW_DURATION = 1.0;
 const VIEWBOX_HEIGHT = 160;
 const MIN_VIEWBOX_WIDTH = 1024;
 
@@ -54,8 +54,8 @@ export default function AnimatedHeroName() {
                 <g key={ `${glyph.char}-${glyphIndex}` }>
                   { glyph.paths.map((d: string, pathIndex: number) => {
                     // Stagger animation based on global path index for continuous flow
-                    // Added small initial delay (0.2s) to allow main thread to settle
-                    const outlineDelay = 0.2 + (acc.globalPathIndex + pathIndex) * 0.04;
+                    // Removed initial delay and increased stagger for more sequential feel
+                    const outlineDelay = (acc.globalPathIndex + pathIndex) * 0.08;
 
                     return (
                       <path
@@ -99,6 +99,7 @@ export default function AnimatedHeroName() {
               fill: none; 
               stroke-dasharray: 1;
               stroke-dashoffset: 1;
+              stroke-opacity: 0;
               will-change: stroke-dashoffset, stroke-opacity;
               animation-name: hero-outline-draw;
               animation-duration: ${DRAW_DURATION}s;
