@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-[#222222] text-white antialiased flex flex-col">
+      <body className="min-h-screen bg-[#222222] text-white antialiased flex flex-col" suppressHydrationWarning>
         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#222222]/90 backdrop-blur">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="text-lg font-semibold text-[#ff8820]">
