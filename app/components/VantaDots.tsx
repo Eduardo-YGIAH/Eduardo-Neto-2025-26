@@ -97,18 +97,17 @@ export default function VantaDots() {
         return;
       }
 
-      if (idleWindow.requestIdleCallback) {
-        idleHandle = idleWindow.requestIdleCallback(() => {
-          idleHandle = null;
-          init();
-        }, { timeout: 1500 });
-        return;
-      }
-
+      // Enforce a delay to ensure the Hero animation (approx 3s) completes without main-thread contention
       timeoutId = window.setTimeout(() => {
-        timeoutId = null;
-        init();
-      }, 600);
+        if (idleWindow.requestIdleCallback) {
+          idleHandle = idleWindow.requestIdleCallback(() => {
+            idleHandle = null;
+            init();
+          }, { timeout: 2000 });
+        } else {
+          init();
+        }
+      }, 3500);
     };
 
     const navigatorConnection = (navigator as NavigatorWithConnection).connection;
