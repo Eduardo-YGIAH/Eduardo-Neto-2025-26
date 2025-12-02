@@ -1,11 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-const AnimatedHeroName = dynamic(() => import("./AnimatedHeroName"), {
-  ssr: false,
-  loading: () => <div className="min-h-[8rem] w-full" />,
-});
+import AnimatedHeroName from "./AnimatedHeroName";
 
 export default function HeroName() {
   return (
