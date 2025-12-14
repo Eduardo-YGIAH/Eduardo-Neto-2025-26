@@ -11,6 +11,8 @@ interface RevealProps {
     className?: string;
 }
 
+const FALLBACK_TIMEOUT_MS = 3000;
+
 export const Reveal = ({
     children,
     width = "fit-content",
@@ -21,12 +23,19 @@ export const Reveal = ({
 }: RevealProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const [ isVisible, setIsVisible ] = useState(false);
+    const [ hasMounted, setHasMounted ] = useState(false);
 
     useEffect(() => {
+        setHasMounted(true);
+
+        // Fallback timeout: show content if IntersectionObserver never fires
+        const timeout = setTimeout(() => setIsVisible(true), FALLBACK_TIMEOUT_MS);
+
         const observer = new IntersectionObserver(
             ([ entry ]) => {
                 if (entry.isIntersecting) {
                     setIsVisible(true);
+                    clearTimeout(timeout);
                     observer.disconnect();
                 }
             },
@@ -37,17 +46,24 @@ export const Reveal = ({
             observer.observe(ref.current);
         }
 
-        return () => observer.disconnect();
+        return () => {
+            clearTimeout(timeout);
+            observer.disconnect();
+        };
     }, []);
+
+    // Only hide content after client has mounted - SSR output remains visible
+    const shouldHide = hasMounted && !isVisible;
 
     return (
         <div ref={ ref } className={ className } style={ { position: "relative", width } }>
             <div
                 style={ {
-                    transform: isVisible ? "translateY(0)" : `translateY(${yOffset}px)`,
-                    opacity: isVisible ? 1 : 0,
-                    transition: `transform ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`,
-                    transitionDelay: `${delay}s`,
+                    transform: shouldHide ? `translateY(${yOffset}px)` : "translateY(0)",
+                    opacity: shouldHide ? 0 : 1,
+                    transition: hasMounted
+                        ? `transform ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s, opacity ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s`
+                        : "none",
                 } }
             >
                 { children }
