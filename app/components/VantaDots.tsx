@@ -87,7 +87,8 @@ export default function VantaDots() {
     };
 
     const scheduleInit = () => {
-      if (disposed || effectRef.current) {
+      // Guard against duplicate scheduling if already pending or initialized
+      if (disposed || effectRef.current || timeoutId !== null) {
         return;
       }
 
@@ -97,8 +98,10 @@ export default function VantaDots() {
         return;
       }
 
-      // Enforce a delay to ensure the Hero animation (approx 3s) completes without main-thread contention
+      // Enforce a delay to ensure the Hero animation (~6.6s) completes without main-thread contention
+      // Hero animation: last path delay ~5.6s + 1s draw duration = ~6.6s total
       timeoutId = window.setTimeout(() => {
+        timeoutId = null; // Clear after firing to allow re-scheduling if needed
         if (idleWindow.requestIdleCallback) {
           idleHandle = idleWindow.requestIdleCallback(() => {
             idleHandle = null;
@@ -107,7 +110,7 @@ export default function VantaDots() {
         } else {
           init();
         }
-      }, 3500);
+      }, 7000);
     };
 
     const navigatorConnection = (navigator as NavigatorWithConnection).connection;
@@ -125,6 +128,15 @@ export default function VantaDots() {
 
     const handleMotionChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
+        // User prefers reduced motion - cancel any pending init and tear down
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        if (idleHandle !== null && (window as IdleWindow).cancelIdleCallback) {
+          (window as IdleWindow).cancelIdleCallback?.(idleHandle);
+          idleHandle = null;
+        }
         tearDown();
       } else if (!event.matches && !effectRef.current) {
         scheduleInit();
