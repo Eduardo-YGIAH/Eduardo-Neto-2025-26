@@ -13,14 +13,17 @@ const VIEWBOX_HEIGHT = 160;
 const MIN_VIEWBOX_WIDTH = 1024;
 const FALLBACK_TIMEOUT_MS = 3000;
 
+// Check once at module level for environments without IntersectionObserver
+const hasIntersectionObserver = typeof IntersectionObserver !== "undefined";
+
 export default function AnimatedHeroName() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [ isVisible, setIsVisible ] = useState(false);
+  // Initialize as visible if IntersectionObserver is unavailable (fallback for unsupported environments)
+  const [ isVisible, setIsVisible ] = useState(!hasIntersectionObserver);
 
   useEffect(() => {
-    // Fallback: trigger animation if IntersectionObserver is unavailable
-    if (typeof IntersectionObserver === "undefined") {
-      setIsVisible(true);
+    // Skip observer setup if IntersectionObserver is unavailable (already visible via initial state)
+    if (!hasIntersectionObserver) {
       return;
     }
 

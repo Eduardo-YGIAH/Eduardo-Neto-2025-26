@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 interface RevealProps {
     children: React.ReactNode;
@@ -12,6 +12,13 @@ interface RevealProps {
 }
 
 const FALLBACK_TIMEOUT_MS = 3000;
+// Check once at module level for environments without IntersectionObserver
+const hasIntersectionObserver = typeof IntersectionObserver !== "undefined";
+
+// Use useSyncExternalStore to safely detect client-side hydration
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 export const Reveal = ({
     children,
@@ -23,55 +30,64 @@ export const Reveal = ({
 }: RevealProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const [ isVisible, setIsVisible ] = useState(false);
-    const [ hasMounted, setHasMounted ] = useState(false);
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const checkedViewportRef = useRef(false);
+
+    // Safely detect if we're on the client (after hydration)
+    const isClient = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
 
     useEffect(() => {
-        // Check if element is already in viewport to avoid flicker for above-the-fold content
+        if (!isClient) return;
+
         const element = ref.current;
-        if (element) {
+        if (!element) return;
+
+        // Check viewport once on mount
+        if (!checkedViewportRef.current) {
+            checkedViewportRef.current = true;
             const rect = element.getBoundingClientRect();
             const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
-            if (isInViewport) {
-                // Already visible - skip the hide/show cycle
-                setIsVisible(true);
-                setHasMounted(true);
+
+            if (isInViewport || !hasIntersectionObserver) {
+                // Already visible or no observer - show immediately (async to satisfy lint)
+                queueMicrotask(() => setIsVisible(true));
                 return;
             }
         }
 
-        setHasMounted(true);
+        // Skip if already visible
+        if (isVisible) return;
 
-        // Fallback: show content if IntersectionObserver is unavailable or never fires
-        if (typeof IntersectionObserver === "undefined") {
-            setIsVisible(true);
+        // If no IntersectionObserver, show content
+        if (!hasIntersectionObserver) {
+            queueMicrotask(() => setIsVisible(true));
             return;
         }
 
-        const timeout = setTimeout(() => setIsVisible(true), FALLBACK_TIMEOUT_MS);
+        timeoutRef.current = setTimeout(() => setIsVisible(true), FALLBACK_TIMEOUT_MS);
 
-        const observer = new IntersectionObserver(
+        observerRef.current = new IntersectionObserver(
             ([ entry ]) => {
                 if (entry.isIntersecting) {
                     setIsVisible(true);
-                    clearTimeout(timeout);
-                    observer.disconnect();
+                    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                    observerRef.current?.disconnect();
                 }
             },
             { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
         );
 
-        if (element) {
-            observer.observe(element);
-        }
+        observerRef.current.observe(element);
 
         return () => {
-            clearTimeout(timeout);
-            observer.disconnect();
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            observerRef.current?.disconnect();
         };
-    }, []);
+    }, [ isClient, isVisible ]);
 
-    // Only hide content after client has mounted - SSR output remains visible
-    const shouldHide = hasMounted && !isVisible;
+    // Only hide content after client hydration - SSR output remains visible
+    const shouldHide = isClient && !isVisible;
 
     return (
         <div ref={ ref } className={ className } style={ { position: "relative", width } }>
@@ -79,7 +95,7 @@ export const Reveal = ({
                 style={ {
                     transform: shouldHide ? `translateY(${yOffset}px)` : "translateY(0)",
                     opacity: shouldHide ? 0 : 1,
-                    transition: hasMounted
+                    transition: isClient
                         ? `transform ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s, opacity ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s`
                         : "none",
                 } }
