@@ -45,9 +45,11 @@ export default function CodePane({ items }: Props) {
               <p className="mt-1 text-sm text-zinc-300">{item.description}</p>
             )}
           </div>
-          <pre className="overflow-x-auto rounded-md border border-white/10 bg-black/80 p-4 text-xs leading-relaxed">
-            <code className={`language-${item.language}`}>{item.code}</code>
-          </pre>
+          <div className="grid min-w-0 grid-cols-1">
+            <pre className="overflow-x-auto rounded-md border border-white/10 bg-black/80 p-4 text-xs leading-relaxed">
+              <code className={`language-${item.language}`}>{item.code}</code>
+            </pre>
+          </div>
         </article>
       ))}
     </div>

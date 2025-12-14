@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { blogPosts, getPostBySlug } from "../posts";
+import CodePane from "@/app/components/demos/CodePane";
 import { type JSX } from "react";
 import { buildCloudinaryUrl, CLOUDINARY_BLUR_DATA_URL } from "@/lib/cloudinary";
 
@@ -217,8 +218,343 @@ function RtkQueryArticle() {
   );
 }
 
+
+function ReconciliationPerformanceArticle() {
+  const stateColocationCode = [
+    "// Optimized pattern: State colocated with its consumers",
+    "function Dashboard() {",
+    "  return (",
+    "    <Layout>",
+    "      <Sidebar>",
+    "        <FilterSection /> {/* State lives inside here */}",
+    "      </Sidebar>",
+    "      <MainContent>",
+    "        <DataSection />",
+    "      </MainContent>",
+    "    </Layout>",
+    "  );",
+    "}",
+    "",
+    "function FilterSection() {",
+    "  const [filter, setFilter] = useState('all');",
+    "  ",
+    "  return <FilterControls filter={filter} onChange={setFilter} />;",
+    "}",
+  ].join("\n");
+
+  const compositionCode = [
+    "// Optimized: ExpensiveComponent passed as children",
+    "// When Dashboard updates its own state (count), ExpensiveComponent ",
+    "// is NOT re-rendered because the \"children\" prop reference remains stable.",
+    "function Dashboard({ children }) {",
+    "  const [count, setCount] = useState(0);",
+    "  ",
+    "  return (",
+    "    <div>",
+    "      <button onClick={() => setCount(c => c + 1)}>",
+    "        Count: {count}",
+    "      </button>",
+    "      {children}",
+    "    </div>",
+    "  );",
+    "}",
+    "",
+    "// Usage",
+    "<Dashboard>",
+    "  <ExpensiveComponent />",
+    "</Dashboard>",
+  ].join("\n");
+
+  return (
+    <>
+      <section className="space-y-4">
+        <p>
+          React&apos;s declarative programming model has revolutionized how we build user interfaces, but beneath its
+          elegant surface lies a complex reconciliation algorithm that can make or break your application&apos;s
+          performance. While most developers understand that unnecessary re-renders are &quot;bad,&quot; few truly grasp
+          the cascading performance implications of React&apos;s rendering process—or how to architect applications that
+          work with, rather than against, React&apos;s model.
+        </p>
+        <p>
+          In this deep dive, we&apos;ll explore the true performance characteristics of React, examine real-world
+          scenarios where conventional wisdom fails, and discuss architectural patterns that can dramatically improve your
+          application&apos;s performance profile.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">
+          Understanding React&apos;s Rendering Process: Render and Commit
+        </h2>
+        <p>
+          React&apos;s updates are often misunderstood as a three-step process, but officially, the framework models
+          updates in two primary phases. Understanding this distinction is vital for performance tuning.
+        </p>
+        <ul className="list-disc space-y-3 pl-6 text-zinc-300">
+          <li>
+            <span className="font-medium text-white">The Render Phase:</span> React calls your components to determine
+            what should appear on the screen. During this phase, React compares the new result with the previous one
+            (this comparison is often called &quot;reconciliation&quot;) to calculate the necessary changes.
+          </li>
+          <li>
+            <span className="font-medium text-white">The Commit Phase:</span> React applies those calculated changes to
+            the actual DOM.
+          </li>
+        </ul>
+        <div className="rounded-l border-l-4 border-[#ff8820] bg-white/5 p-4 text-zinc-300">
+          <p className="font-medium text-white">React Documentation Insights</p>
+          <p className="italic">
+            &quot;Trigger a render -&gt; React renders your components -&gt; React commits changes to the DOM&quot;
+          </p>
+          <p className="mt-1 text-sm text-zinc-400">— React Documentation: Render and Commit</p>
+        </div>
+        <p>
+          While the commit phase is expensive (DOM mutations are slow), the render phase can also become a bottleneck in
+          large applications. Even if no changes are committed to the DOM, the computational cost of generating
+          component trees and diffing them can block the main thread, leading to a sluggish UI.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">The Specifics of Optimization Boundaries</h2>
+        <p>
+          Modern React applications emphasize component composition. However, large component trees can introduce overhead
+          if updates aren&apos;t managed correctly.
+        </p>
+        <p>
+          A common misconception is that React must always traverse the &quot;entire tree&quot; to reconcile updates. In
+          reality, React optimizes this process using memoization. When a component is wrapped in{" "}
+          <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">React.memo</code>, React checks
+          if the props have changed. If the props are identical to the previous render, React skips executing the
+          component function and reuses the previously rendered Fiber subtree. This effectively avoids the render work
+          for that entire branch.
+        </p>
+        <div className="rounded-l border-l-4 border-[#ff8820] bg-white/5 p-4 text-zinc-300">
+          <p className="font-medium text-white">React Documentation Insights</p>
+          <p className="italic">
+            &quot;React normally re-renders a component whenever its parent re-renders. With memo, you can create a
+            component that React will not re-render when its parent re-renders so long as its new props are the same as
+            the old props.&quot;
+          </p>
+          <p className="mt-1 text-sm text-zinc-400">— React Documentation: Skipping re-renders with memo</p>
+        </div>
+        <p>
+          This means the cost is not a full tree traversal of new elements, but rather the cost of the prop comparison
+          and reusing the existing Fiber nodes.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">State Colocation: A Powerful Performance Pattern</h2>
+        <p>
+          One of the most effective—yet underutilized—performance optimization techniques is state colocation: moving
+          state as close as possible to where it&apos;s actually used. This approach minimizes the rendering scope by
+          ensuring that state updates only trigger re-renders in the specific subtree that depends on that state.
+        </p>
+
+        <CodePane
+          items={[
+            {
+              title: "State Colocation Example",
+              language: "tsx",
+              code: stateColocationCode,
+            },
+          ]}
+        />
+
+        <p>
+          By colocating the filter state within <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">FilterSection</code>,
+          we create a natural performance boundary. When the filter changes, only the FilterSection subtree renders—the
+          rest of the application remains untouched.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">The Context API Performance Nuance</h2>
+        <p>
+          React&apos;s Context API is excellent for avoiding prop drilling, but it comes with a performance caveat: All
+          consumers that read a context will re-render when the context value changes.
+        </p>
+        <p>
+          Crucially, React determines &quot;change&quot; using object identity (
+          <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">Object.is</code>). If you pass a
+          new object to your Provider during every render (e.g.,{" "}
+          <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">value=&#123;&#123; user, setUser &#125;&#125;</code>
+          ), all consumers will re-render even if the underlying data hasn&apos;t changed.
+        </p>
+        <div className="rounded-l border-l-4 border-[#ff8820] bg-white/5 p-4 text-zinc-300">
+          <p className="font-medium text-white">React Documentation Insights</p>
+          <p className="italic">
+            &quot;React automatically re-renders all the children that use a particular context starting from the
+            provider that receives a different value. The previous and the next values are compared with the Object.is
+            comparison.&quot;
+          </p>
+          <p className="mt-1 text-sm text-zinc-400">— React Documentation: useContext Caveats</p>
+        </div>
+        <p>
+          To solve this, you should split contexts based on their update frequency (e.g., separating UserContext from
+          ThemeContext) or use{" "}
+          <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">useMemo</code> to ensure the
+          context value object maintains referential identity unless its dependencies change.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Composition Over Memoization</h2>
+        <p>
+          <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">React.memo()</code>,{" "}
+          <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">useMemo()</code>, and{" "}
+          <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">useCallback()</code> are powerful
+          tools, but they add code complexity. A more fundamental approach is to leverage component composition.
+        </p>
+        <p>
+          When a wrapper component updates its own state, it must re-render. However, if the props it passes to its
+          children (specifically the children prop) are referentially equal to the previous render, React&apos;s
+          reconciliation algorithm detects this stability. It will then reuse the existing Fiber subtree for those
+          children, avoiding the need to run their component functions again.
+        </p>
+        <div className="rounded-l border-l-4 border-[#ff8820] bg-white/5 p-4 text-zinc-300">
+          <p className="font-medium text-white">React Documentation Insights</p>
+          <p className="italic">
+            &quot;When a component visually wraps other components, let it accept JSX as children. This way, when the
+            wrapper component updates its own state, React knows that its children don&apos;t need to re-render.&quot;
+          </p>
+          <p className="mt-1 text-sm text-zinc-400">— React Documentation: Memoization Principles</p>
+        </div>
+
+        <CodePane
+          items={[
+            {
+              title: "Composition Example",
+              language: "tsx",
+              code: compositionCode,
+            },
+          ]}
+        />
+
+        <p>
+          Because <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">ExpensiveComponent</code>{" "}
+          is instantiated in the parent scope (which didn&apos;t re-render), the children prop passed into Dashboard is
+          the exact same object instance as before. React detects this identity match and bails out of rendering the
+          children slot.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Measuring What Matters: Performance Profiling</h2>
+        <p>
+          The most critical skill for optimizing React applications is knowing where to optimize. The React DevTools
+          Profiler provides detailed insights into your application&apos;s rendering behavior.
+        </p>
+        <ul className="list-disc space-y-3 pl-6 text-zinc-300">
+          <li>
+            <span className="font-medium text-white">Flame graphs</span> visualize which components re-render and how
+            long they take.
+          </li>
+          <li>
+            <span className="font-medium text-white">Ranked charts</span> identify the most expensive components in your
+            tree.
+          </li>
+          <li>
+            <span className="font-medium text-white">&quot;Why did this render?&quot; tool</span> highlights exactly
+            which prop or state change triggered the update.
+          </li>
+        </ul>
+        <div className="rounded-l border-l-4 border-[#ff8820] bg-white/5 p-4 text-zinc-300">
+          <p className="font-medium text-white">React Documentation Insights</p>
+          <p className="italic">
+            &quot;If a specific interaction still feels laggy, use the React Developer Tools profiler to see which
+            components would benefit the most from memoization.&quot;
+          </p>
+          <p className="mt-1 text-sm text-zinc-400">— React Documentation: Profiling</p>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Architectural Patterns for Scale</h2>
+        <p>
+          As applications grow, architectural decisions have outsized performance implications. Consider these patterns
+          for large-scale React applications:
+        </p>
+        <ul className="list-disc space-y-3 pl-6 text-zinc-300">
+          <li>
+            <span className="font-medium text-white">Boundary Components:</span> Create explicit performance boundaries
+            using context and composition to prevent state changes in one feature from triggering reconciliation in
+            unrelated features.
+          </li>
+          <li>
+            <span className="font-medium text-white">Windowing for Large Lists:</span> For lists with hundreds of items,
+            use virtual scrolling libraries like{" "}
+            <a
+              href="https://github.com/bvaughn/react-window"
+              className="text-[#ff8820] hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              react-window
+            </a>{" "}
+            to render only the visible items.
+          </li>
+          <li>
+            <span className="font-medium text-white">Code Splitting by Route:</span> Lazy-loading route components with{" "}
+            <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">React.lazy()</code> and{" "}
+            <code className="mx-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white">Suspense</code> ensures that
+            you only load and reconcile the code needed for the current view.
+          </li>
+          <li>
+            <span className="font-medium text-white">External State Management:</span> For complex state interactions,
+            libraries like{" "}
+            <a
+              href="https://github.com/pmndrs/zustand"
+              className="text-[#ff8820] hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Zustand
+            </a>
+            ,{" "}
+            <a
+              href="https://jotai.org/"
+              className="text-[#ff8820] hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Jotai
+            </a>
+            , or{" "}
+            <a
+              href="https://redux-toolkit.js.org/"
+              className="text-[#ff8820] hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Redux Toolkit
+            </a>{" "}
+            allow for fine-grained subscriptions that can sometimes bypass the top-down React render cycle for specific
+            updates.
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Conclusion: Performance is Architecture</h2>
+        <p>
+          React&apos;s rendering model is remarkably efficient, but it operates within constraints defined by your
+          architecture. The most significant performance gains come not from micro-optimizations, but from thoughtful
+          decisions like state colocation and component composition.
+        </p>
+        <p>
+          By understanding the distinct phases of rendering and leveraging React&apos;s built-in composition model, you
+          can build applications that remain responsive and performant even as they scale.
+        </p>
+      </section>
+    </>
+  );
+}
+
 const articleBySlug: Record<string, () => JSX.Element> = {
   "when-and-when-not-to-use-rtk-query": RtkQueryArticle,
+  "hidden-cost-of-react-re-renders": ReconciliationPerformanceArticle,
   "mock-server-cut-blockers": () => (
     <div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-sm text-zinc-300">
       Detailed write-up is in progress. Subscribe to be notified when it ships.
@@ -301,7 +637,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </Link>
 
         <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-black/55 backdrop-blur-sm shadow-xl shadow-black/40">
-          <div className="flex flex-col gap-10 p-8 lg:p-12">
+          <div className="flex flex-col gap-10 p-4 sm:p-8 lg:p-12">
             <header className="space-y-6">
               <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400">
                 <span>{formatDate(post.publishedAt)}</span>
@@ -330,7 +666,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             ) : null}
 
             {articleContent ? (
-              <article className="space-y-8 text-base leading-relaxed text-zinc-200 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-white [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-white [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-sm">
+              <article className="min-w-0 space-y-8 text-base leading-relaxed text-zinc-200 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-white [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-white [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-sm">
                 {articleContent}
               </article>
             ) : null}
