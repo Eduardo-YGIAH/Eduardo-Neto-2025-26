@@ -26,9 +26,27 @@ export const Reveal = ({
     const [ hasMounted, setHasMounted ] = useState(false);
 
     useEffect(() => {
+        // Check if element is already in viewport to avoid flicker for above-the-fold content
+        const element = ref.current;
+        if (element) {
+            const rect = element.getBoundingClientRect();
+            const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+            if (isInViewport) {
+                // Already visible - skip the hide/show cycle
+                setIsVisible(true);
+                setHasMounted(true);
+                return;
+            }
+        }
+
         setHasMounted(true);
 
-        // Fallback timeout: show content if IntersectionObserver never fires
+        // Fallback: show content if IntersectionObserver is unavailable or never fires
+        if (typeof IntersectionObserver === "undefined") {
+            setIsVisible(true);
+            return;
+        }
+
         const timeout = setTimeout(() => setIsVisible(true), FALLBACK_TIMEOUT_MS);
 
         const observer = new IntersectionObserver(
@@ -42,8 +60,8 @@ export const Reveal = ({
             { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
         );
 
-        if (ref.current) {
-            observer.observe(ref.current);
+        if (element) {
+            observer.observe(element);
         }
 
         return () => {

@@ -18,6 +18,12 @@ export default function AnimatedHeroName() {
   const [ isVisible, setIsVisible ] = useState(false);
 
   useEffect(() => {
+    // Fallback: trigger animation if IntersectionObserver is unavailable
+    if (typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
+
     // Fallback timeout: trigger animation if IntersectionObserver never fires
     const timeout = setTimeout(() => setIsVisible(true), FALLBACK_TIMEOUT_MS);
 
