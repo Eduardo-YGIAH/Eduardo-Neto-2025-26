@@ -37,4 +37,3 @@ export function createItemsApi(fetchImpl: typeof fetch, options: CreateItemsApiO
 
 export type ItemsApi = ReturnType<typeof createItemsApi>;
 
-

@@ -67,5 +67,3 @@ export default function NaiveList({ filter, fetcher }: Props) {
     </div>
   );
 }
-
-

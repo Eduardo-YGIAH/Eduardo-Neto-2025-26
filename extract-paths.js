@@ -1,5 +1,4 @@
 const opentype = require('opentype.js');
-const fs = require('fs');
 const path = require('path');
 
 const FONT_PATH = path.join(process.cwd(), 'public/fonts/Monoton-Regular.ttf');

@@ -3,6 +3,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import { HERO_LAYOUT } from "./HeroNamePaths";
 
+type Glyph = {
+  char: string;
+  paths: string[];
+};
+
 const DRAW_DURATION = 1.0;
 const VIEWBOX_HEIGHT = 160;
 const MIN_VIEWBOX_WIDTH = 1024;
@@ -44,7 +49,7 @@ export default function AnimatedHeroName() {
           fill="none"
         >
           <g transform={ `translate(${baseX}, 0)` } style={ { filter: "drop-shadow(0 0 8px rgba(255, 136, 32, 0.3))" } }>
-            { glyphs.reduce((acc: { nodes: React.ReactNode[], globalPathIndex: number }, glyph: any, glyphIndex: number) => {
+            { glyphs.reduce((acc: { nodes: React.ReactNode[], globalPathIndex: number }, glyph: Glyph, glyphIndex: number) => {
               if (!glyph.paths.length) {
                 acc.nodes.push(<React.Fragment key={ `space-${glyphIndex}` } />);
                 return acc;
