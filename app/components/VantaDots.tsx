@@ -145,6 +145,15 @@ export default function VantaDots() {
 
     mediaQuery.addEventListener("change", handleMotionChange);
 
+    const handleResize = () => {
+      // Only attempt init if we're now above threshold and not already initialized/pending
+      if (window.innerWidth >= 600 && !effectRef.current && timeoutId === null) {
+        scheduleInit();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
     scheduleInit();
 
     return () => {
@@ -156,6 +165,7 @@ export default function VantaDots() {
         window.clearTimeout(timeoutId);
       }
       mediaQuery?.removeEventListener("change", handleMotionChange);
+      window.removeEventListener("resize", handleResize);
       tearDown();
     };
   }, []);

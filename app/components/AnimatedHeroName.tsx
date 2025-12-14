@@ -18,12 +18,13 @@ const hasIntersectionObserver = typeof IntersectionObserver !== "undefined";
 
 export default function AnimatedHeroName() {
   const containerRef = useRef<HTMLDivElement>(null);
-  // Initialize as visible if IntersectionObserver is unavailable (fallback for unsupported environments)
-  const [ isVisible, setIsVisible ] = useState(!hasIntersectionObserver);
+  // Always start hidden to avoid hydration mismatch (server vs client IntersectionObserver availability)
+  const [ isVisible, setIsVisible ] = useState(false);
 
   useEffect(() => {
-    // Skip observer setup if IntersectionObserver is unavailable (already visible via initial state)
+    // If no IntersectionObserver, show immediately after hydration (async to satisfy lint)
     if (!hasIntersectionObserver) {
+      queueMicrotask(() => setIsVisible(true));
       return;
     }
 
@@ -124,15 +125,13 @@ export default function AnimatedHeroName() {
             stroke-opacity: 1;
           }
 
-          /* Animated state: reset to hidden and play animation */
+          /* Animated state: animation controls visibility via fill-mode: both */
           .animated .hero-path {
-            stroke-dashoffset: 1;
-            stroke-opacity: 0;
             will-change: stroke-dashoffset, stroke-opacity;
             animation-name: hero-outline-draw;
             animation-duration: ${DRAW_DURATION}s;
             animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            animation-fill-mode: forwards;
+            animation-fill-mode: both;
           }
         `}</style>
       </svg>
