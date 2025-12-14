@@ -61,6 +61,19 @@ export const blogPosts: BlogPostSummary[] = [
     tags: ["Career", "UX", "Leadership"],
     comingSoon: true,
   },
+  {
+    slug: "hidden-cost-of-react-re-renders",
+    title: "The Hidden Cost of React Re-renders: A Deep Dive into Reconciliation Performance",
+    excerpt:
+      "React's complex reconciliation algorithm can make or break performance. Explore architectural patterns that work with, rather than against, React's model.",
+    publishedAt: "2025-04-15",
+    readingTime: "10 min read",
+    image: {
+      src: "https://res.cloudinary.com/ygiah/image/upload/v1765733534/Portfolio%202025-26/reconciliation-performance-min.png",
+      alt: "Diagram illustrating React's reconciliation process and performance optimization boundaries",
+    },
+    tags: ["React", "Performance", "Architecture"],
+  },
 ];
 
 export function getPostBySlug(slug: string | string[] | null | undefined) {

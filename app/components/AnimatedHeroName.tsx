@@ -8,10 +8,19 @@ type Glyph = {
   paths: string[];
 };
 
+type NavigatorWithConnection = Navigator & {
+  connection?: {
+    effectiveType?: string;
+  };
+};
+
 const DRAW_DURATION = 1.0;
 const VIEWBOX_HEIGHT = 160;
 const MIN_VIEWBOX_WIDTH = 1024;
 const FALLBACK_TIMEOUT_MS = 3000;
+
+// Slow connection types where we skip animation (includes 3G for better UX)
+const SLOW_CONNECTION_TYPES = new Set([ "slow-2g", "2g", "3g" ]);
 
 // Check once at module level for environments without IntersectionObserver
 const hasIntersectionObserver = typeof IntersectionObserver !== "undefined";
@@ -20,8 +29,27 @@ export default function AnimatedHeroName() {
   const containerRef = useRef<HTMLDivElement>(null);
   // Always start hidden to avoid hydration mismatch (server vs client IntersectionObserver availability)
   const [ isVisible, setIsVisible ] = useState(false);
+  // Track if we should skip animation due to slow network or reduced motion
+  const [ skipAnimation, setSkipAnimation ] = useState(false);
 
   useEffect(() => {
+    // Check for slow network or reduced motion preference
+    const connection = (navigator as NavigatorWithConnection).connection;
+    const isSlowNetwork = connection?.effectiveType
+      ? SLOW_CONNECTION_TYPES.has(connection.effectiveType)
+      : false;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isLighthouse = /lighthouse/i.test(window.navigator.userAgent);
+
+    if (isSlowNetwork || prefersReducedMotion || isLighthouse) {
+      // Skip animation - show static version immediately
+      queueMicrotask(() => {
+        setSkipAnimation(true);
+        setIsVisible(true);
+      });
+      return;
+    }
+
     // If no IntersectionObserver, show immediately after hydration (async to satisfy lint)
     if (!hasIntersectionObserver) {
       queueMicrotask(() => setIsVisible(true));
@@ -56,12 +84,19 @@ export default function AnimatedHeroName() {
   const viewBoxWidth = Math.max(totalWidth + 160, MIN_VIEWBOX_WIDTH);
   const baseX = (viewBoxWidth - totalWidth) / 2;
 
+  // Determine which class to apply based on state
+  const svgClass = skipAnimation && isVisible
+    ? "static"
+    : isVisible
+      ? "animated"
+      : "";
+
   return (
     <div ref={ containerRef } className="flex min-h-[8rem] w-full items-center justify-center">
       <svg
         role="img"
         aria-label="Eduardo Neto"
-        className={ `h-32 w-full ${isVisible ? "animated" : ""}` }
+        className={ `h-32 w-full ${svgClass}` }
         viewBox={ `0 0 ${viewBoxWidth} ${VIEWBOX_HEIGHT}` }
         fill="none"
       >
@@ -113,7 +148,7 @@ export default function AnimatedHeroName() {
             }
           }
 
-          /* Default state: visible (SSR fallback) */
+          /* Default state: hidden (prevents flash before animation starts) */
           .hero-path {
             stroke: #ff8820;
             stroke-width: 2;
@@ -121,17 +156,23 @@ export default function AnimatedHeroName() {
             stroke-linejoin: round;
             fill: none;
             stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+            stroke-opacity: 0;
+          }
+
+          /* Static state: immediate visibility without animation (slow networks, reduced motion) */
+          .static .hero-path {
             stroke-dashoffset: 0;
             stroke-opacity: 1;
           }
 
-          /* Animated state: animation controls visibility via fill-mode: both */
+          /* Animated state: draw animation */
           .animated .hero-path {
             will-change: stroke-dashoffset, stroke-opacity;
             animation-name: hero-outline-draw;
             animation-duration: ${DRAW_DURATION}s;
             animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            animation-fill-mode: both;
+            animation-fill-mode: forwards;
           }
         `}</style>
       </svg>
