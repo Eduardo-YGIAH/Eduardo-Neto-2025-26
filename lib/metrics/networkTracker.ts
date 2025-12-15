@@ -111,4 +111,3 @@ export function withTracking<T extends FetchLike>(fetchLike: T) {
   return createTrackedFetch(getNetworkTracker(), fetchLike);
 }
 
-

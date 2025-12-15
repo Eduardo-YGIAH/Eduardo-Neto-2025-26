@@ -15,7 +15,7 @@ type NavigatorWithConnection = Navigator & {
   };
 };
 
-const SLOW_CONNECTION_TYPES = new Set(["slow-2g", "2g"]);
+const SLOW_CONNECTION_TYPES = new Set([ "slow-2g", "2g" ]);
 
 export default function VantaDots() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -87,23 +87,30 @@ export default function VantaDots() {
     };
 
     const scheduleInit = () => {
-      if (disposed || effectRef.current) {
+      // Guard against duplicate scheduling if already pending or initialized
+      if (disposed || effectRef.current || timeoutId !== null) {
         return;
       }
 
       const idleWindow = window as IdleWindow;
-      if (idleWindow.requestIdleCallback) {
-        idleHandle = idleWindow.requestIdleCallback(() => {
-          idleHandle = null;
-          init();
-        }, { timeout: 1500 });
+      // Disable on mobile devices to avoid high TBT (Total Blocking Time)
+      if (window.innerWidth < 600) {
         return;
       }
 
+      // Enforce a delay to ensure the Hero animation (~6.6s) completes without main-thread contention
+      // Hero animation: last path delay ~5.6s + 1s draw duration = ~6.6s total
       timeoutId = window.setTimeout(() => {
-        timeoutId = null;
-        init();
-      }, 600);
+        timeoutId = null; // Clear after firing to allow re-scheduling if needed
+        if (idleWindow.requestIdleCallback) {
+          idleHandle = idleWindow.requestIdleCallback(() => {
+            idleHandle = null;
+            init();
+          }, { timeout: 2000 });
+        } else {
+          init();
+        }
+      }, 7000);
     };
 
     const navigatorConnection = (navigator as NavigatorWithConnection).connection;
@@ -121,6 +128,15 @@ export default function VantaDots() {
 
     const handleMotionChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
+        // User prefers reduced motion - cancel any pending init and tear down
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        if (idleHandle !== null && (window as IdleWindow).cancelIdleCallback) {
+          (window as IdleWindow).cancelIdleCallback?.(idleHandle);
+          idleHandle = null;
+        }
         tearDown();
       } else if (!event.matches && !effectRef.current) {
         scheduleInit();
@@ -128,6 +144,15 @@ export default function VantaDots() {
     };
 
     mediaQuery.addEventListener("change", handleMotionChange);
+
+    const handleResize = () => {
+      // Only attempt init if we're now above threshold and not already initialized/pending
+      if (window.innerWidth >= 600 && !effectRef.current && timeoutId === null) {
+        scheduleInit();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
 
     scheduleInit();
 
@@ -140,16 +165,15 @@ export default function VantaDots() {
         window.clearTimeout(timeoutId);
       }
       mediaQuery?.removeEventListener("change", handleMotionChange);
+      window.removeEventListener("resize", handleResize);
       tearDown();
     };
   }, []);
 
   return (
     <div
-      ref={containerRef}
+      ref={ containerRef }
       className="pointer-events-none fixed inset-0 z-0 h-full w-full"
     />
   );
 }
-
-

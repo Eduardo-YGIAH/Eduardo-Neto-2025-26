@@ -27,51 +27,11 @@ body {
   overflow-y: scroll;
 }
 
-.hero-subtext {
-  opacity: 0;
-  transform: translateY(12px);
-  animation-name: hero-subtext-fade;
-  animation-timing-function: ease;
-  animation-fill-mode: forwards;
-}
-
-@keyframes hero-subtext-fade {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.hero-heading {
-  opacity: 0;
-  --hero-slide-start: 60vw;
-  transform: translate3d(var(--hero-slide-start), 0, 0);
-  animation-name: hero-slide-in-right;
-  animation-timing-function: ease;
-  animation-fill-mode: forwards;
-  will-change: transform, opacity;
-}
-
-.hero-card {
-  opacity: 0;
-  --hero-slide-start: 80vw;
-  transform: translate3d(var(--hero-slide-start), 0, 0);
-  animation-name: hero-slide-in-right;
-  animation-timing-function: ease;
-  animation-fill-mode: forwards;
-  will-change: transform, opacity;
-}
-
-@keyframes hero-slide-in-right {
-  0% {
-    opacity: 0;
-    transform: translate3d(var(--hero-slide-start, 60vw), 0, 0);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
+/* 
+ * NOTE: .hero-subtext, .hero-heading, and .hero-card animations are handled
+ * by the Reveal component's inline transitions. CSS animations were removed
+ * to avoid conflicts with Reveal's opacity/transform transitions.
+ */
 
 .tab-panel-wrapper {
   position: relative;
