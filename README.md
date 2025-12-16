@@ -102,6 +102,24 @@ Every push triggers:
 
 ---
 
+## 🔀 Git Workflow
+
+This project uses a **linear-history, rebase-first workflow**. All contributors (including AI assistants) must follow:
+
+- 📖 [Branching Strategy](./docs/branching-strategy.md) — The "what" and "why"
+- 📋 [Git Workflow Guide](./docs/git-workflow.md) — The "how"
+
+**Quick Rules:**
+
+| Rule | Description |
+|------|-------------|
+| **Branch flow** | `feature/*` → `dev` → `main` |
+| **Merge strategy** | "Rebase and Merge" only (no merge commits) |
+| **Before PRs** | Rebase onto `dev`, use `--force-with-lease` if needed |
+| **Branch naming** | `feature/*`, `fix/*`, `chore/*`, `refactor/*` |
+
+---
+
 ## 🏃 Running Locally
 
 ```bash
