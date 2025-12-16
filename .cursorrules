@@ -1,0 +1,64 @@
+# Cursor Rules for Eduardo Neto Portfolio
+
+## Git Workflow Rules
+
+Before suggesting any Git commands, review:
+- `docs/branching-strategy.md` — Strategy and rationale
+- `docs/git-workflow.md` — Step-by-step commands
+
+### Mandatory Rules
+
+1. Feature branches MUST be created from `dev`, never `main`
+2. All PRs go to `dev` first, then `dev` → `main` for releases
+3. Use "Rebase and Merge" exclusively — no merge commits
+4. Never suggest rebasing `dev` onto `main` unless user explicitly requests it (maintainers only)
+5. Always use `--force-with-lease` instead of `--force`
+6. Branch names must follow: `feature/*`, `fix/*`, `chore/*`, or `refactor/*`
+7. Use conventional commit messages: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`
+
+### When User Asks About Git
+
+- Reference the appropriate doc section
+- Provide exact commands from `docs/git-workflow.md`
+- Warn if the request violates the workflow
+
+### Standard Git Command Patterns
+
+```sh
+# Creating a new feature branch (ALWAYS from dev)
+git checkout dev
+git pull
+git checkout -b feature/my-feature
+
+# Rebasing before PR
+git checkout dev
+git pull
+git checkout feature/my-feature
+git rebase dev
+git push --force-with-lease  # Only if already pushed
+
+# Opening a PR
+git push --set-upstream origin feature/my-feature
+# Then open PR into `dev` (never directly to `main`)
+```
+
+## Code Quality Rules
+
+- Before committing, always run ESLint to check for issues
+- Before committing, always run tests and plan fixes if any fail
+- Follow existing code patterns and conventions in the codebase
+- Prefer editing existing files over creating new ones
+- Keep changes focused and minimal
+
+## Project Context
+
+This is a portfolio website built with:
+- Next.js 16 (App Router)
+- TypeScript (strict mode)
+- React 19
+- Tailwind CSS 4
+- Redux Toolkit / RTK Query
+- Vitest for testing
+
+The "Portfolio as Demo" philosophy means the codebase itself demonstrates senior engineering skills.
+
