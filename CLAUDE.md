@@ -131,6 +131,36 @@ Demonstrates senior-level communication and thought leadership.
 - Simple, clean page with links to LinkedIn and GitHub
 - Optional simple contact form
 
+## Git Workflow & Branching
+
+**CRITICAL:** All Git operations must follow our documented workflow:
+
+- **Branching Strategy**: See [`docs/branching-strategy.md`](./docs/branching-strategy.md) — The "what" and "why"
+- **Daily Workflow**: See [`docs/git-workflow.md`](./docs/git-workflow.md) — Step-by-step commands
+
+### Key Rules for AI Agents
+
+- ✅ Always create branches from `dev`: `git checkout dev && git pull && git checkout -b feature/name`
+- ✅ Never merge directly into `main` — always go through `dev` first
+- ✅ Use "Rebase and Merge" only — never create merge commits
+- ✅ Rebase feature branches onto `dev` before opening PRs
+- ⚠️ **NEVER** rebase `dev` onto `main` unless explicitly asked (maintainers only)
+- ✅ Use `--force-with-lease` (never `--force`) when force pushing after rebase
+- ✅ Keep commits focused and use conventional commit messages (`feat:`, `fix:`, `chore:`, etc.)
+
+### Branch Naming
+
+| Type | Pattern | Purpose |
+|------|---------|---------|
+| Feature | `feature/*` | New functionality |
+| Fix | `fix/*` | Bug fixes |
+| Chore | `chore/*` | Non-feature tasks (CI, tooling, configs) |
+| Refactor | `refactor/*` | Internal improvements |
+
+When suggesting Git commands, always reference these docs and ensure compliance.
+
+---
+
 ## Implementation Snapshot — 2025-11-05
 
 ### Global Layout & Branding
