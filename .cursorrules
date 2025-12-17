@@ -11,7 +11,7 @@ Before suggesting any Git commands, review:
 1. Feature branches MUST be created from `dev`, never `main`
 2. All PRs go to `dev` first, then `dev` → `main` for releases
 3. Use "Rebase and Merge" exclusively — no merge commits
-4. Never suggest rebasing `dev` onto `main` unless user explicitly requests it (maintainers only)
+4. Rebasing `dev` onto `main` is maintainer-only (required for releases per docs/branching-strategy.md)
 5. Always use `--force-with-lease` instead of `--force`
 6. Branch names must follow: `feature/*`, `fix/*`, `chore/*`, or `refactor/*`
 7. Use conventional commit messages: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`

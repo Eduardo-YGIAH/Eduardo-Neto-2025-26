@@ -144,7 +144,7 @@ Demonstrates senior-level communication and thought leadership.
 - ✅ Never merge directly into `main` — always go through `dev` first
 - ✅ Use "Rebase and Merge" only — never create merge commits
 - ✅ Rebase feature branches onto `dev` before opening PRs
-- ⚠️ **NEVER** rebase `dev` onto `main` unless explicitly asked (maintainers only)
+- ⚠️ Rebasing `dev` onto `main` is a **maintainer-only** operation (required for releases — see [Release Process](./docs/branching-strategy.md#release-process-summary))
 - ✅ Use `--force-with-lease` (never `--force`) when force pushing after rebase
 - ✅ Keep commits focused and use conventional commit messages (`feat:`, `fix:`, `chore:`, etc.)
 
