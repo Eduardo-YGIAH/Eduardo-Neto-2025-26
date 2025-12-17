@@ -114,22 +114,20 @@ jobs:
 
             - ${context.payload.pull_request.title} (#${context.payload.pull_request.number})
 
-            ### Ready to release?
+            ### Actions
 
-            Follow [Release Process](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/dev/docs/release-process.md):
+            Comment one of the following commands:
 
-            1. Open PR: \`dev\` → \`main\`
-            2. Merge with "Rebase and Merge"
-            3. Tag the release:
+            | Command | Action |
+            |---------|--------|
+            | \`/approve-release\` | Creates a PR from \`dev\` to \`main\` |
+            | \`/reject-release\` | Closes this issue without releasing |
 
-            \`\`\`sh
-            git checkout main
-            git pull
-            git tag -a ${process.env.SUGGESTED} -m "Release ${process.env.SUGGESTED}"
-            git push origin ${process.env.SUGGESTED}
-            \`\`\`
+            After the release PR is merged, tagging and GitHub Release creation happen automatically.
 
-            4. Close this issue
+            ---
+
+            **Manual release:** See [Release Process](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/dev/docs/release-process.md)
 
             ---
             *Last updated: ${new Date().toISOString()}*
