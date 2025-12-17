@@ -89,15 +89,18 @@ jobs:
           echo "bump=$BUMP" >> $GITHUB_OUTPUT
           echo "suggested=$SUGGESTED" >> $GITHUB_OUTPUT
       
-      # Only comment if there are feature commits (smart filtering)
-      - name: Post release assessment comment
+      # Create or update Release Candidate issue (only if feat: or breaking changes)
+      - name: Create or update Release Candidate issue
         if: steps.assessment.outputs.feat_count > 0 || steps.assessment.outputs.has_breaking > 0
         uses: actions/github-script@v7
         with:
           script: |
+            const label = 'release-candidate';
+            const title = 'Release Candidate';
+            
             const body = `## Release Assessment
 
-            This PR includes feature work. Consider cutting a release.
+            New feature work has been merged to \`dev\`. Consider cutting a release.
 
             | Metric | Value |
             |--------|-------|
@@ -106,6 +109,10 @@ jobs:
             | **Highest change type** | ${process.env.HIGHEST_TYPE} |
             | **Recommended bump** | ${process.env.BUMP} |
             | **Suggested version** | \`${process.env.SUGGESTED}\` |
+
+            ### Recent PRs included
+
+            - ${context.payload.pull_request.title} (#${context.payload.pull_request.number})
 
             ### Ready to release?
 
@@ -122,19 +129,80 @@ jobs:
             git push origin ${process.env.SUGGESTED}
             \`\`\`
 
-            ---
-            *This assessment was generated automatically based on conventional commit analysis.*`;
+            4. Close this issue
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            ---
+            *Last updated: ${new Date().toISOString()}*
+            *Triggered by: #${context.payload.pull_request.number}*`;
+
+            // Check if release-candidate label exists, create if not
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label
+              });
+            } catch (e) {
+              if (e.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label,
+                  color: '0E8A16',
+                  description: 'Indicates dev branch is ready for a release'
+                });
+              }
+            }
+
+            // Find existing open release-candidate issue
+            const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: body
+              labels: label,
+              state: 'open'
             });
+
+            if (issues.data.length > 0) {
+              // Update existing issue
+              const existingIssue = issues.data[0];
+              
+              // Append to the "Recent PRs included" section
+              let updatedBody = body.replace(
+                '### Recent PRs included\n\n',
+                `### Recent PRs included\n\n`
+              );
+              
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: updatedBody
+              });
+              
+              // Add a comment noting the update
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `Updated: PR #${context.payload.pull_request.number} merged. Suggested version is now \`${process.env.SUGGESTED}\`.`
+              });
+              
+              console.log(`Updated existing issue #${existingIssue.number}`);
+            } else {
+              // Create new issue
+              const newIssue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: [label]
+              });
+              
+              console.log(`Created new issue #${newIssue.data.number}`);
+            }
         env:
           LAST_TAG: ${{ steps.assessment.outputs.last_tag }}
           COMMIT_COUNT: ${{ steps.assessment.outputs.commit_count }}
           HIGHEST_TYPE: ${{ steps.assessment.outputs.highest_type }}
           BUMP: ${{ steps.assessment.outputs.bump }}
           SUGGESTED: ${{ steps.assessment.outputs.suggested }}
-
