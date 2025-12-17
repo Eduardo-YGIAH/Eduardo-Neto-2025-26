@@ -71,15 +71,17 @@ No feature branch should ever merge directly into `main`.
 
 ```mermaid
 flowchart LR
-    subgraph Development
-        F1[feature/*] -->|PR: Rebase & Merge| D[dev]
-        F2[fix/*] -->|PR: Rebase & Merge| D
-        F3[chore/*] -->|PR: Rebase & Merge| D
+    subgraph Development [Development Flow]
+        F1[feature/*] -->|PR| CI1{CI}
+        F2[fix/*] -->|PR| CI1
+        F3[chore/*] -->|PR| CI1
+        CI1 -->|Pass + Review| D[dev]
     end
-    D -->|Release PR: Rebase & Merge| M[main]
+    D -->|Release PR| CI2{CI}
+    CI2 -->|Pass| M[main]
 ```
 
-> **Note:** This workflow uses "Rebase and Merge" exclusively — no merge commits. The result is a clean, linear history on both `dev` and `main`.
+> **Note:** This workflow uses "Rebase and Merge" exclusively — no merge commits. All PRs must pass CI checks before merging. The result is a clean, linear history on both `dev` and `main`.
 
 ---
 
@@ -92,7 +94,7 @@ All branches are kept up-to-date through rebasing (never merging):
 
 > **Why rebase?** Rebasing replays your commits on top of the target branch, resulting in a linear history without merge commits. This makes the commit log easier to read, debug, and bisect.
 
-For detailed commands, see the [Git Workflow Guide](./git-workflow.md#keeping-your-branch-updated-rebasing).
+For detailed commands, see the [Git Workflow Guide](./git-workflow.md#keeping-your-branch-updated).
 
 ---
 
@@ -100,15 +102,18 @@ For detailed commands, see the [Git Workflow Guide](./git-workflow.md#keeping-yo
 
 ### Feature → dev
 - Must be rebased first
-- CI checks required
-- “Rebase and Merge” only (no merge commits)
+- CI checks required (ESLint, tests, build)
+- "Rebase and Merge" only (no merge commits)
 - PR should contain clear, cohesive work
+- Code review approval required
 
 ### dev → main
 - Performed when preparing a release
 - Must be fully rebased on top of `main`
-- CI checks required
-- “Rebase and Merge” preferred to maintain linear history
+- CI checks required (ESLint, tests, build, Lighthouse)
+- "Rebase and Merge" preferred to maintain linear history
+
+For detailed CI requirements, see [CI Checks](./git-workflow.md#ci-checks) and [Reviewer Checklist](./git-workflow.md#reviewer-checklist).
 
 ---
 
