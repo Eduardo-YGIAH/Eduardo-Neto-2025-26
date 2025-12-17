@@ -1,0 +1,140 @@
+name: Release Assessment
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [dev]
+
+jobs:
+  assess-release:
+    name: Assess Release Readiness
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for tags and commit analysis
+      
+      - name: Analyze commits for release assessment
+        id: assessment
+        run: |
+          # Get last tag (default to v0.0.0 if none exists)
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Last tag: $LAST_TAG"
+          
+          # Count commits since last tag
+          if [ "$LAST_TAG" = "v0.0.0" ]; then
+            COMMIT_COUNT=$(git rev-list HEAD --count)
+          else
+            COMMIT_COUNT=$(git rev-list ${LAST_TAG}..HEAD --count)
+          fi
+          echo "Commits since last tag: $COMMIT_COUNT"
+          
+          # Check for different commit types since last tag
+          if [ "$LAST_TAG" = "v0.0.0" ]; then
+            COMMIT_LOG=$(git log --oneline)
+          else
+            COMMIT_LOG=$(git log ${LAST_TAG}..HEAD --oneline)
+          fi
+          
+          # Count feat: commits
+          FEAT_COUNT=$(echo "$COMMIT_LOG" | grep -cE "^[a-f0-9]+ feat(\(.+\))?:" || echo "0")
+          
+          # Check for breaking changes
+          if [ "$LAST_TAG" = "v0.0.0" ]; then
+            BREAKING_COUNT=$(git log --oneline --grep="BREAKING CHANGE" | wc -l | tr -d ' ')
+            BREAKING_BANG=$(git log --oneline --grep="^feat!:\|^fix!:" | wc -l | tr -d ' ')
+          else
+            BREAKING_COUNT=$(git log ${LAST_TAG}..HEAD --oneline --grep="BREAKING CHANGE" | wc -l | tr -d ' ')
+            BREAKING_BANG=$(git log ${LAST_TAG}..HEAD --oneline --grep="^feat!:\|^fix!:" | wc -l | tr -d ' ')
+          fi
+          HAS_BREAKING=$((BREAKING_COUNT + BREAKING_BANG))
+          
+          echo "Feature commits: $FEAT_COUNT"
+          echo "Breaking changes: $HAS_BREAKING"
+          
+          # Determine highest change type and bump
+          if [ "$HAS_BREAKING" -gt 0 ]; then
+            HIGHEST_TYPE="BREAKING CHANGE"
+            BUMP="MAJOR"
+          elif [ "$FEAT_COUNT" -gt 0 ]; then
+            HIGHEST_TYPE="feat"
+            BUMP="MINOR"
+          else
+            HIGHEST_TYPE="fix/chore/docs"
+            BUMP="PATCH"
+          fi
+          
+          # Parse current version and calculate suggested version
+          MAJOR=$(echo $LAST_TAG | sed 's/v//' | cut -d. -f1)
+          MINOR=$(echo $LAST_TAG | sed 's/v//' | cut -d. -f2)
+          PATCH=$(echo $LAST_TAG | sed 's/v//' | cut -d. -f3)
+          
+          case $BUMP in
+            MAJOR) SUGGESTED="v$((MAJOR+1)).0.0" ;;
+            MINOR) SUGGESTED="v${MAJOR}.$((MINOR+1)).0" ;;
+            PATCH) SUGGESTED="v${MAJOR}.${MINOR}.$((PATCH+1))" ;;
+          esac
+          
+          echo "Suggested version: $SUGGESTED"
+          
+          # Set outputs
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+          echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+          echo "feat_count=$FEAT_COUNT" >> $GITHUB_OUTPUT
+          echo "has_breaking=$HAS_BREAKING" >> $GITHUB_OUTPUT
+          echo "highest_type=$HIGHEST_TYPE" >> $GITHUB_OUTPUT
+          echo "bump=$BUMP" >> $GITHUB_OUTPUT
+          echo "suggested=$SUGGESTED" >> $GITHUB_OUTPUT
+      
+      # Only comment if there are feature commits (smart filtering)
+      - name: Post release assessment comment
+        if: steps.assessment.outputs.feat_count > 0 || steps.assessment.outputs.has_breaking > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## Release Assessment
+
+            This PR includes feature work. Consider cutting a release.
+
+            | Metric | Value |
+            |--------|-------|
+            | **Current version** | \`${process.env.LAST_TAG}\` |
+            | **Commits since release** | ${process.env.COMMIT_COUNT} |
+            | **Highest change type** | ${process.env.HIGHEST_TYPE} |
+            | **Recommended bump** | ${process.env.BUMP} |
+            | **Suggested version** | \`${process.env.SUGGESTED}\` |
+
+            ### Ready to release?
+
+            Follow [Release Process](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/dev/docs/release-process.md):
+
+            1. Open PR: \`dev\` → \`main\`
+            2. Merge with "Rebase and Merge"
+            3. Tag the release:
+
+            \`\`\`sh
+            git checkout main
+            git pull
+            git tag -a ${process.env.SUGGESTED} -m "Release ${process.env.SUGGESTED}"
+            git push origin ${process.env.SUGGESTED}
+            \`\`\`
+
+            ---
+            *This assessment was generated automatically based on conventional commit analysis.*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+        env:
+          LAST_TAG: ${{ steps.assessment.outputs.last_tag }}
+          COMMIT_COUNT: ${{ steps.assessment.outputs.commit_count }}
+          HIGHEST_TYPE: ${{ steps.assessment.outputs.highest_type }}
+          BUMP: ${{ steps.assessment.outputs.bump }}
+          SUGGESTED: ${{ steps.assessment.outputs.suggested }}
+
