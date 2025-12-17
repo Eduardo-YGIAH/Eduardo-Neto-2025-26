@@ -8,6 +8,8 @@ For branching rules, see [Branching Strategy](./branching-strategy.md).
 ## Index
 
 - [When to Release](#when-to-release)
+- [Initial Release (First Tag)](#initial-release-first-tag)
+- [Version 1.0.0 Criteria](#version-100-criteria)
 - [Version Selection](#version-selection)
 - [Commit-to-Version Mapping](#commit-to-version-mapping)
 - [Release Steps](#release-steps)
@@ -26,6 +28,53 @@ Consider a release when:
 - [ ] No known blocking issues
 
 > **Tip:** Prefer small, frequent releases over large batches. This reduces merge conflict risk and makes rollbacks easier.
+
+---
+
+## Initial Release (First Tag)
+
+For projects without an existing tag, create the initial release to establish a baseline.
+
+This project uses `v0.x.x` for pre-launch development:
+- `v0.1.0` — Initial release (aligns with `package.json`)
+- `v0.x.x` — Incremental pre-launch development
+- `v1.0.0` — Official launch (see [Version 1.0.0 Criteria](#version-100-criteria))
+
+### Creating the First Tag
+
+```sh
+git checkout main
+git pull
+git tag -a v0.1.0 -m "Initial release"
+git push origin v0.1.0
+```
+
+> **Note:** The GitHub Action handles "no tags yet" by defaulting to `v0.0.0`. After the first feature PR merges to `dev`, it will suggest `v0.1.0`.
+
+---
+
+## Version 1.0.0 Criteria
+
+Promote to `v1.0.0` when the site is ready for official launch.
+
+### Launch Readiness Checklist
+
+- [ ] **Core sections complete:** Hero, About, Projects/Demos, Contact
+- [ ] **Production deployment configured:** Vercel production environment (not just preview)
+- [ ] **Performance targets met:** Lighthouse scores above thresholds
+- [ ] **Accessibility verified:** WCAG 2.1 AA compliance
+- [ ] **Content finalized:** Copy reviewed, no placeholder text
+- [ ] **Analytics configured:** (if applicable)
+- [ ] **Domain configured:** (if using custom domain)
+
+### Why v1.0.0 Matters
+
+For a portfolio, `v1.0.0` signals:
+- The site is ready to share with employers and network
+- The "public interface" (what visitors see) is stable
+- You're confident in directing professional traffic to it
+
+Until then, `v0.x.x` releases allow iteration without implying "production ready."
 
 ---
 
