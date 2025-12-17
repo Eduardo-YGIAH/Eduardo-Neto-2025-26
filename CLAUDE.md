@@ -137,6 +137,7 @@ Demonstrates senior-level communication and thought leadership.
 
 - **Branching Strategy**: See [`docs/branching-strategy.md`](./docs/branching-strategy.md) — The "what" and "why"
 - **Daily Workflow**: See [`docs/git-workflow.md`](./docs/git-workflow.md) — Step-by-step commands
+- **Release Process**: See [`docs/release-process.md`](./docs/release-process.md) — Versioning and tagging
 
 ### Key Rules for AI Agents
 
@@ -144,7 +145,7 @@ Demonstrates senior-level communication and thought leadership.
 - ✅ Never merge directly into `main` — always go through `dev` first
 - ✅ Use "Rebase and Merge" only — never create merge commits
 - ✅ Rebase feature branches onto `dev` before opening PRs
-- ⚠️ Rebasing `dev` onto `main` is a **maintainer-only** operation (required for releases — see [Release Process](./docs/branching-strategy.md#release-process-summary))
+- ⚠️ Rebasing `dev` onto `main` is a **maintainer-only** operation (required for releases — see [Release Process](./docs/release-process.md))
 - ✅ Use `--force-with-lease` (never `--force`) when force pushing after rebase
 - ✅ Keep commits focused and use conventional commit messages (`feat:`, `fix:`, `chore:`, etc.)
 
