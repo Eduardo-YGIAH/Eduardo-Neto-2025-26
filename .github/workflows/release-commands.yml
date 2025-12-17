@@ -1,0 +1,120 @@
+name: Release Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  handle-approve:
+    name: Handle /approve-release
+    if: |
+      contains(github.event.issue.labels.*.name, 'release-candidate') &&
+      contains(github.event.comment.body, '/approve-release')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Create release PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // React to the comment to acknowledge
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'rocket'
+            });
+            
+            // Check if a release PR already exists
+            const existingPRs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:dev`,
+              base: 'main',
+              state: 'open'
+            });
+            
+            if (existingPRs.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `A release PR already exists: #${existingPRs.data[0].number}\n\nPlease review and merge it to complete the release.`
+              });
+              return;
+            }
+            
+            // Create the release PR
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Release: dev → main',
+              head: 'dev',
+              base: 'main',
+              body: `## Release PR
+
+            This PR was created automatically via \`/approve-release\` command.
+
+            **Source issue:** #${context.issue.number}
+
+            ### After merging
+
+            - A release tag will be created automatically
+            - A GitHub Release will be created automatically
+            - The Release Candidate issue will be closed automatically
+
+            ### Checklist
+
+            - [ ] CI checks pass
+            - [ ] Changes reviewed
+            - [ ] Ready to deploy to production
+
+            ---
+            *Triggered by: @${context.payload.comment.user.login}*`
+            });
+            
+            // Comment on the issue with the PR link
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Release PR created: #${pr.data.number}\n\nReview and merge to complete the release. Tagging will happen automatically after merge.`
+            });
+
+  handle-reject:
+    name: Handle /reject-release
+    if: |
+      contains(github.event.issue.labels.*.name, 'release-candidate') &&
+      contains(github.event.comment.body, '/reject-release')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Close issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // React to the comment to acknowledge
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+            
+            // Add rejection comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Release rejected by @${context.payload.comment.user.login}.\n\nThis issue will be closed. A new Release Candidate issue will be created when new feature work is merged to \`dev\`.`
+            });
+            
+            // Close the issue
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed',
+              state_reason: 'not_planned'
+            });
+
