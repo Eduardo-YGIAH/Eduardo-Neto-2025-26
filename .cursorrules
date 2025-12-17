@@ -5,6 +5,7 @@
 Before suggesting any Git commands, review:
 - `docs/branching-strategy.md` — Strategy and rationale
 - `docs/git-workflow.md` — Step-by-step commands
+- `docs/release-process.md` — Versioning and tagging
 
 ### Mandatory Rules
 
@@ -40,6 +41,47 @@ git push --force-with-lease  # Only if already pushed
 # Opening a PR
 git push --set-upstream origin feature/my-feature
 # Then open PR into `dev` (never directly to `main`)
+```
+
+## Release Checklist Rules
+
+After a PR to `dev` is merged, provide a release assessment when appropriate.
+
+### When to Provide Release Assessment
+
+- After PR to `dev` merges with `feat:` commits
+- When user explicitly asks about releases
+- Do NOT auto-suggest for every small fix (only when `feat:` commits are present)
+
+### Release Readiness Checklist
+
+- [ ] `dev` has commits not yet on `main`
+- [ ] CI is green on `dev`
+- [ ] Review commit types since last release tag
+
+### Version Recommendation Rules
+
+Determine version bump based on highest-priority commit since last tag:
+- Any `BREAKING CHANGE:` in body or `!` suffix → **MAJOR** (X.0.0)
+- Any `feat:` commits → **MINOR** (x.Y.0)
+- Only `fix:`, `chore:`, `refactor:`, `docs:`, `test:` → **PATCH** (x.y.Z)
+
+### Release Assessment Format
+
+When providing a release assessment, use this format:
+
+```
+## Release Assessment
+
+**Commits since last release:** [count]
+**Highest change type:** [feat/fix/chore/etc.]
+**Recommended bump:** [MAJOR/MINOR/PATCH]
+**Suggested version:** vX.Y.Z (based on current: vA.B.C)
+
+**Ready to release?** Follow [Release Process](docs/release-process.md):
+1. Open PR: `dev` → `main`
+2. Merge with "Rebase and Merge"
+3. Tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`
 ```
 
 ## Code Quality Rules

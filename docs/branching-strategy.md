@@ -14,6 +14,7 @@ This repository uses a lightweight, production-oriented branching model designed
 - [Branch Naming Conventions](#branch-naming-conventions)
 - [Why This Strategy Works](#why-this-strategy-works)
 - [Release Process Summary](#release-process-summary)
+- [Release Process and Versioning](./release-process.md)
 
 ---
 
@@ -159,4 +160,4 @@ refactor/api-client
 
 > **Tip:** Prefer small, frequent releases over large batches. This reduces merge conflict risk and makes rollbacks easier if issues arise.
 
-For detailed release steps, see [Releasing to Production](./git-workflow.md#releasing-to-production).
+For detailed release steps and versioning, see [Release Process and Versioning](./release-process.md).
