@@ -18,6 +18,7 @@ This project uses a linear-history, rebase-first workflow designed to keep `main
 - [Reviewer Checklist](#reviewer-checklist)
 - [Keeping the `dev` Branch Clean](#keeping-the-dev-branch-clean)
 - [Releasing to Production](#releasing-to-production)
+- [Release Process and Versioning](./release-process.md)
 - [Advanced Scenarios](#advanced-scenarios)
 - [Cheat Sheet](#cheat-sheet)
 - [FAQ and Troubleshooting](#faq-and-troubleshooting)
@@ -267,7 +268,8 @@ When `dev` is stable:
 1. Open a PR from `dev` → `main`
 2. Ensure all checks pass
 3. Merge using **Rebase and Merge**
-4. CI deploys automatically (if configured)
+4. Tag the release following [Release Process and Versioning](./release-process.md)
+5. CI deploys automatically (if configured)
 
 ---
 
