@@ -42,14 +42,14 @@ jobs:
           # Count feat: commits
           FEAT_COUNT=$(echo "$COMMIT_LOG" | grep -cE "^[a-f0-9]+ feat(\(.+\))?:" || echo "0")
           
-          # Check for breaking changes
+          # Check for breaking changes (both BREAKING CHANGE in body and feat!/fix! notation)
           if [ "$LAST_TAG" = "v0.0.0" ]; then
             BREAKING_COUNT=$(git log --oneline --grep="BREAKING CHANGE" | wc -l | tr -d ' ')
-            BREAKING_BANG=$(git log --oneline --grep="^feat!:\|^fix!:" | wc -l | tr -d ' ')
           else
             BREAKING_COUNT=$(git log ${LAST_TAG}..HEAD --oneline --grep="BREAKING CHANGE" | wc -l | tr -d ' ')
-            BREAKING_BANG=$(git log ${LAST_TAG}..HEAD --oneline --grep="^feat!:\|^fix!:" | wc -l | tr -d ' ')
           fi
+          # Detect feat!/fix! notation by parsing oneline output directly
+          BREAKING_BANG=$(echo "$COMMIT_LOG" | grep -cE "^[a-f0-9]+ (feat|fix)(\(.+\))?!:" || echo "0")
           HAS_BREAKING=$((BREAKING_COUNT + BREAKING_BANG))
           
           echo "Feature commits: $FEAT_COUNT"
@@ -91,7 +91,7 @@ jobs:
       
       # Create or update Release Candidate issue (only if feat: or breaking changes)
       - name: Create or update Release Candidate issue
-        if: steps.assessment.outputs.feat_count > 0 || steps.assessment.outputs.has_breaking > 0
+        if: ${{ steps.assessment.outputs.feat_count > 0 || steps.assessment.outputs.has_breaking > 0 }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -163,12 +163,51 @@ jobs:
             if (issues.data.length > 0) {
               // Update existing issue
               const existingIssue = issues.data[0];
+              const existingBody = existingIssue.body || '';
               
-              // Append to the "Recent PRs included" section
-              let updatedBody = body.replace(
-                '### Recent PRs included\n\n',
-                `### Recent PRs included\n\n`
-              );
+              // Extract existing PR list from the issue body
+              const prListMatch = existingBody.match(/### Recent PRs included\n\n([\s\S]*?)\n\n### Actions/);
+              const existingPRs = prListMatch ? prListMatch[1].trim() : '';
+              
+              // Build new PR list with current PR appended
+              const currentPR = `- ${context.payload.pull_request.title} (#${context.payload.pull_request.number})`;
+              const newPRList = existingPRs ? `${existingPRs}\n${currentPR}` : currentPR;
+              
+              // Build updated body with the accumulated PR list
+              const updatedBody = `## Release Assessment
+
+            New feature work has been merged to \`dev\`. Consider cutting a release.
+
+            | Metric | Value |
+            |--------|-------|
+            | **Current version** | \`${process.env.LAST_TAG}\` |
+            | **Commits since release** | ${process.env.COMMIT_COUNT} |
+            | **Highest change type** | ${process.env.HIGHEST_TYPE} |
+            | **Recommended bump** | ${process.env.BUMP} |
+            | **Suggested version** | \`${process.env.SUGGESTED}\` |
+
+            ### Recent PRs included
+
+            ${newPRList}
+
+            ### Actions
+
+            Comment one of the following commands:
+
+            | Command | Action |
+            |---------|--------|
+            | \`/approve-release\` | Creates a PR from \`dev\` to \`main\` |
+            | \`/reject-release\` | Closes this issue without releasing |
+
+            After the release PR is merged, tagging and GitHub Release creation happen automatically.
+
+            ---
+
+            **Manual release:** See [Release Process](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/dev/docs/release-process.md)
+
+            ---
+            *Last updated: ${new Date().toISOString()}*
+            *Triggered by: #${context.payload.pull_request.number}*`;
               
               await github.rest.issues.update({
                 owner: context.repo.owner,
