@@ -37,9 +37,8 @@ export default function RootLayout({
           <div className="mx-auto max-w-6xl px-6 text-sm text-zinc-400 flex items-center justify-between">
             <span>© { new Date().getFullYear() } Eduardo Neto</span>
             <div className="flex items-center gap-4">
-              <a className="hover:text-white" href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
-              <a className="hover:text-white" href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
-              <a className="hover:text-white" href="https://github.com/" target="_blank" rel="noreferrer">View Source</a>
+              <a className="hover:text-white" href="https://github.com/Eduardo-YGIAH/Eduardo-Neto-2025-26" target="_blank" rel="noreferrer">GitHub</a>
+              <a className="hover:text-white" href="https://www.linkedin.com/in/eduardo-neto-b71bb36b" target="_blank" rel="noreferrer">LinkedIn</a>
             </div>
           </div>
         </footer>

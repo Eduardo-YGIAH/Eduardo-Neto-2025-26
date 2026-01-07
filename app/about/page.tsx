@@ -12,7 +12,7 @@ export default function About() {
         </p>
       </section>
       <div className="mt-6 flex items-center gap-4">
-        <a className="rounded-md bg-[#ff8820] px-4 py-2 text-sm font-medium text-black hover:opacity-90" href="/cv.pdf">
+        <a className="rounded-md bg-[#ff8820] px-4 py-2 text-sm font-medium text-black hover:opacity-90" href="https://res.cloudinary.com/ygiah/image/upload/v1765904616/Portfolio%202025-26/Eduardo_Neto_Software_Engineer.pdf" target="_blank" rel="noreferrer">
           Download CV
         </a>
       </div>
