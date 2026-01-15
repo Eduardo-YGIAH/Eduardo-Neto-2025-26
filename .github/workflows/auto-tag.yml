@@ -43,11 +43,10 @@ jobs:
           # Check for breaking changes (both BREAKING CHANGE in body and feat!/fix! notation)
           if [ "$LAST_TAG" = "v0.0.0" ]; then
             BREAKING_COUNT=$(git log --oneline --grep="BREAKING CHANGE" | wc -l | tr -d ' ')
-            BREAKING_BANG=$(echo "$COMMIT_LOG" | grep -cE "^[a-f0-9]+ (feat|fix)(\(.+\))?!:" || echo "0")
           else
             BREAKING_COUNT=$(git log ${LAST_TAG}..HEAD --oneline --grep="BREAKING CHANGE" | wc -l | tr -d ' ')
-            BREAKING_BANG=$(echo "$COMMIT_LOG" | grep -cE "^[a-f0-9]+ (feat|fix)(\(.+\))?!:" || echo "0")
           fi
+          BREAKING_BANG=$(echo "$COMMIT_LOG" | grep -cE "^[a-f0-9]+ (feat|fix)(\(.+\))?!:" || echo "0")
           HAS_BREAKING=$((BREAKING_COUNT + BREAKING_BANG))
           
           echo "Feature commits: $FEAT_COUNT"
