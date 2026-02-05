@@ -27,6 +27,15 @@ export const blogPosts: BlogPostSummary[] = [
     tags: ["Redux", "RTK Query", "Caching"],
   },
   {
+    slug: "defensive-react-uis-that-never-break",
+    title: "The Art of Defensive React: Building UIs That Gracefully Handle the Unexpected",
+    excerpt:
+      "Error boundaries, fallback patterns, and resilience strategies that keep your users happy even when things go wrong.",
+    publishedAt: "2025-02-05",
+    readingTime: "11 min read",
+    tags: ["React", "Error Handling", "Architecture", "UX"],
+  },
+  {
     slug: "mock-server-cut-blockers",
     title: "How We Cut Developer Blockers by 50% with a Mock Server",
     excerpt: "Mirage JS as a safety net for teams shipping fast without backend bottlenecks.",

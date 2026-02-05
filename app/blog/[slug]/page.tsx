@@ -552,8 +552,462 @@ function ReconciliationPerformanceArticle() {
   );
 }
 
+function DefensiveReactArticle() {
+  const errorBoundaryCode = [
+    "class ErrorBoundary extends Component<Props, State> {",
+    "  state: State = { hasError: false, error: null };",
+    "",
+    "  static getDerivedStateFromError(error: Error): State {",
+    "    return { hasError: true, error };",
+    "  }",
+    "",
+    "  componentDidCatch(error: Error, info: ErrorInfo) {",
+    "    // Log to your error tracking service",
+    "    errorService.capture(error, {",
+    "      componentStack: info.componentStack,",
+    "      userId: this.props.userId,",
+    "    });",
+    "  }",
+    "",
+    "  render() {",
+    "    if (this.state.hasError) {",
+    "      return this.props.fallback ?? <DefaultErrorUI />;",
+    "    }",
+    "    return this.props.children;",
+    "  }",
+    "}",
+  ].join("\\n");
+
+  const granularBoundariesCode = [
+    "function Dashboard() {",
+    "  return (",
+    "    <Layout>",
+    "      {/* Critical path: isolated boundary */}",
+    "      <ErrorBoundary fallback={<ChartPlaceholder />}>",
+    "        <RevenueChart />",
+    "      </ErrorBoundary>",
+    "",
+    "      {/* Non-critical: shared boundary */}",
+    "      <ErrorBoundary fallback={<WidgetsFallback />}>",
+    "        <NotificationsWidget />",
+    "        <ActivityFeed />",
+    "        <QuickActions />",
+    "      </ErrorBoundary>",
+    "",
+    "      {/* Must never fail: multiple layers */}",
+    "      <ErrorBoundary fallback={<EmergencyNav />}>",
+    "        <Navigation />",
+    "      </ErrorBoundary>",
+    "    </Layout>",
+    "  );",
+    "}",
+  ].join("\\n");
+
+  const safePropAccessCode = [
+    "// ❌ Fragile: assumes shape exists",
+    "function UserCard({ user }) {",
+    "  return <span>{user.profile.name}</span>;",
+    "}",
+    "",
+    "// ✅ Defensive: graceful fallbacks",
+    "function UserCard({ user }) {",
+    "  const name = user?.profile?.name ?? 'Anonymous';",
+    "  const avatar = user?.profile?.avatar;",
+    "",
+    "  return (",
+    "    <div className=\\\"flex items-center gap-3\\\">",
+    "      {avatar ? (",
+    "        <img src={avatar} alt={name} />",
+    "      ) : (",
+    "        <DefaultAvatar />",
+    "      )}",
+    "      <span>{name}</span>",
+    "    </div>",
+    "  );",
+    "}",
+  ].join("\\n");
+
+  const asyncBoundaryCode = [
+    "function AsyncBoundary({ children, fallback, errorFallback }) {",
+    "  return (",
+    "    <ErrorBoundary fallback={errorFallback}>",
+    "      <Suspense fallback={fallback}>",
+    "        {children}",
+    "      </Suspense>",
+    "    </ErrorBoundary>",
+    "  );",
+    "}",
+    "",
+    "// Usage: unified loading + error handling",
+    "<AsyncBoundary",
+    "  fallback={<TableSkeleton rows={10} />}",
+    "  errorFallback={<TableError onRetry={refetch} />}",
+    ">",
+    "  <DataTable />",
+    "</AsyncBoundary>",
+  ].join("\\n");
+
+  const retryPatternCode = [
+    "function useRetryableFetch<T>(fetcher: () => Promise<T>) {",
+    "  const [state, setState] = useState<{",
+    "    data: T | null;",
+    "    error: Error | null;",
+    "    isLoading: boolean;",
+    "    retryCount: number;",
+    "  }>({ data: null, error: null, isLoading: true, retryCount: 0 });",
+    "",
+    "  const execute = useCallback(async () => {",
+    "    setState(s => ({ ...s, isLoading: true, error: null }));",
+    "    try {",
+    "      const data = await fetcher();",
+    "      setState({ data, error: null, isLoading: false, retryCount: 0 });",
+    "    } catch (error) {",
+    "      setState(s => ({",
+    "        ...s,",
+    "        error: error as Error,",
+    "        isLoading: false,",
+    "        retryCount: s.retryCount + 1,",
+    "      }));",
+    "    }",
+    "  }, [fetcher]);",
+    "",
+    "  const retry = useCallback(() => execute(), [execute]);",
+    "",
+    "  return { ...state, retry };",
+    "}",
+  ].join("\\n");
+
+  return (
+    <>
+      <section className="space-y-4">
+        <p>
+          In production, things break. APIs return unexpected shapes. Third-party scripts fail to load. Users interact
+          with your UI in ways you never anticipated. The difference between a frustrating experience and a resilient
+          one often comes down to how thoughtfully you&apos;ve handled the unexpected.
+        </p>
+        <p>
+          After years of building and maintaining large-scale React applications, I&apos;ve learned that defensive
+          programming isn&apos;t paranoia—it&apos;s professionalism. This article explores the patterns and strategies
+          that keep users happy even when things go wrong.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">The Philosophy of Graceful Degradation</h2>
+        <p>
+          Before diving into code, let&apos;s establish a mental model. Graceful degradation means that when a component
+          fails, the failure should be:{" "}
+        </p>
+        <ul className="list-disc space-y-3 pl-6 text-zinc-300">
+          <li>
+            <span className="font-medium text-white">Contained:</span> A broken widget shouldn&apos;t crash the entire
+            page.
+          </li>
+          <li>
+            <span className="font-medium text-white">Informative:</span> Users should understand something went wrong,
+            without technical jargon.
+          </li>
+          <li>
+            <span className="font-medium text-white">Recoverable:</span> Where possible, offer a path forward—retry,
+            refresh, or navigate elsewhere.
+          </li>
+          <li>
+            <span className="font-medium text-white">Observable:</span> Your team should know about failures before users
+            report them.
+          </li>
+        </ul>
+        <p>
+          This philosophy shapes everything from component architecture to API integration patterns.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Error Boundaries: Your First Line of Defense</h2>
+        <p>
+          React&apos;s{" "}
+          <a
+            href="https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary"
+            className="text-[#ff8820] hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Error Boundaries
+          </a>{" "}
+          catch JavaScript errors in their child component tree during rendering, lifecycle methods, and constructors.
+          They&apos;re the foundation of defensive React architecture.
+        </p>
+
+        <CodePane
+          items={[
+            {
+              title: "Error Boundary Implementation",
+              language: "tsx",
+              code: errorBoundaryCode,
+            },
+          ]}
+        />
+
+        <div className="rounded-l border-l-4 border-[#ff8820] bg-white/5 p-4 text-zinc-300">
+          <p className="font-medium text-white">Important Limitation</p>
+          <p className="italic">
+            Error boundaries do not catch errors in event handlers, async code (like setTimeout or fetch), or
+            server-side rendering. You&apos;ll need complementary patterns for those scenarios.
+          </p>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Strategic Boundary Placement</h2>
+        <p>
+          Where you place error boundaries matters as much as having them. Too few boundaries and a single failure
+          cascades everywhere. Too many and you&apos;re drowning in boilerplate.
+        </p>
+        <p>
+          I recommend thinking in terms of <span className="font-medium text-white">blast radius</span>: how much of
+          your UI should be affected if this component fails?
+        </p>
+
+        <CodePane
+          items={[
+            {
+              title: "Granular Boundary Placement",
+              language: "tsx",
+              code: granularBoundariesCode,
+            },
+          ]}
+        />
+
+        <h3 className="text-xl font-semibold text-white">Boundary Placement Heuristics</h3>
+        <ul className="list-disc space-y-3 pl-6 text-zinc-300">
+          <li>
+            <span className="font-medium text-white">Route level:</span> Wrap each route&apos;s content to prevent
+            navigation failures from breaking the entire app.
+          </li>
+          <li>
+            <span className="font-medium text-white">Feature level:</span> Independent features (dashboards, settings,
+            profiles) should have their own boundaries.
+          </li>
+          <li>
+            <span className="font-medium text-white">Third-party integrations:</span> Any component rendering content
+            from external sources (embeds, widgets, iframes) deserves isolation.
+          </li>
+          <li>
+            <span className="font-medium text-white">Dynamic content:</span> User-generated content, markdown
+            rendering, and data visualizations are high-risk areas.
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Defensive Data Access</h2>
+        <p>
+          API responses lie. Even well-documented endpoints occasionally return unexpected shapes, null values, or empty
+          arrays where you expected objects. Defensive data access patterns protect against these realities.
+        </p>
+
+        <CodePane
+          items={[
+            {
+              title: "Safe Property Access",
+              language: "tsx",
+              code: safePropAccessCode,
+            },
+          ]}
+        />
+
+        <h3 className="text-xl font-semibold text-white">Runtime Validation</h3>
+        <p>
+          For critical data, consider runtime validation with libraries like{" "}
+          <a
+            href="https://zod.dev/"
+            className="text-[#ff8820] hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Zod
+          </a>{" "}
+          or{" "}
+          <a
+            href="https://github.com/Effect-TS/effect"
+            className="text-[#ff8820] hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Effect Schema
+          </a>
+          . They let you validate API responses at the boundary and fail fast with meaningful errors rather than
+          propagating undefined through your component tree.
+        </p>
+        <p>
+          The investment pays off especially in TypeScript codebases, where runtime validation bridges the gap between
+          compile-time types and runtime reality.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">The AsyncBoundary Pattern</h2>
+        <p>
+          Modern React applications often use Suspense for data fetching. Combining Suspense with error boundaries
+          creates a powerful pattern I call the &quot;AsyncBoundary&quot;—a single wrapper that handles both loading
+          and error states.
+        </p>
+
+        <CodePane
+          items={[
+            {
+              title: "AsyncBoundary Component",
+              language: "tsx",
+              code: asyncBoundaryCode,
+            },
+          ]}
+        />
+
+        <p>
+          This pattern shines in data-heavy applications where every async operation needs consistent loading and error
+          treatment. It also makes the happy path code remarkably clean—your data components can focus purely on
+          rendering data, trusting that the boundary handles everything else.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Retry Mechanisms and User Recovery</h2>
+        <p>
+          A static error message is a dead end. Wherever possible, give users a path forward. The simplest pattern is a
+          retry button, but the implementation details matter.
+        </p>
+
+        <CodePane
+          items={[
+            {
+              title: "Retryable Fetch Hook",
+              language: "tsx",
+              code: retryPatternCode,
+            },
+          ]}
+        />
+
+        <h3 className="text-xl font-semibold text-white">Retry UX Considerations</h3>
+        <ul className="list-disc space-y-3 pl-6 text-zinc-300">
+          <li>
+            <span className="font-medium text-white">Exponential backoff:</span> For automatic retries, increase delay
+            between attempts to avoid hammering failing services.
+          </li>
+          <li>
+            <span className="font-medium text-white">Retry limits:</span> Track retry count and show different messaging
+            after repeated failures (&quot;Still having trouble? Contact support.&quot;).
+          </li>
+          <li>
+            <span className="font-medium text-white">Optimistic feedback:</span> Show immediate feedback when retry is
+            clicked—a spinner or &quot;Retrying...&quot; message—so users know their action registered.
+          </li>
+          <li>
+            <span className="font-medium text-white">Preserve context:</span> If a form submission fails, don&apos;t
+            clear the form. Let users retry without re-entering data.
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Observability: Know Before Users Tell You</h2>
+        <p>
+          Defensive code without observability is flying blind. You need to know when errors occur, how often, and in
+          what context.
+        </p>
+        <ul className="list-disc space-y-3 pl-6 text-zinc-300">
+          <li>
+            <span className="font-medium text-white">Error tracking integration:</span> Services like{" "}
+            <a
+              href="https://sentry.io/"
+              className="text-[#ff8820] hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Sentry
+            </a>{" "}
+            or{" "}
+            <a
+              href="https://www.bugsnag.com/"
+              className="text-[#ff8820] hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Bugsnag
+            </a>{" "}
+            capture errors with full stack traces and user context.
+          </li>
+          <li>
+            <span className="font-medium text-white">Custom error metadata:</span> Include user ID, feature flags,
+            component hierarchy, and recent user actions to make debugging faster.
+          </li>
+          <li>
+            <span className="font-medium text-white">Error rate alerting:</span> Set up alerts for error rate spikes so
+            you catch regressions immediately after deploys.
+          </li>
+          <li>
+            <span className="font-medium text-white">Session replay:</span> Tools like{" "}
+            <a
+              href="https://logrocket.com/"
+              className="text-[#ff8820] hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              LogRocket
+            </a>{" "}
+            show exactly what the user experienced leading up to an error.
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Testing Error Scenarios</h2>
+        <p>
+          Defensive code is only as good as its test coverage. Make error paths first-class citizens in your test suite.
+        </p>
+        <ul className="list-disc space-y-3 pl-6 text-zinc-300">
+          <li>
+            <span className="font-medium text-white">Mock API failures:</span> Test that your components handle 500s,
+            timeouts, and malformed responses gracefully.
+          </li>
+          <li>
+            <span className="font-medium text-white">Test error boundaries:</span> Verify that throwing components
+            render fallback UI, not blank screens.
+          </li>
+          <li>
+            <span className="font-medium text-white">Snapshot fallback states:</span> Include error and loading states
+            in visual regression tests.
+          </li>
+          <li>
+            <span className="font-medium text-white">Chaos testing:</span> In staging environments, randomly inject
+            failures to validate resilience under realistic conditions.
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-white">Conclusion: Resilience as a Feature</h2>
+        <p>
+          Defensive programming in React isn&apos;t about pessimism—it&apos;s about empathy. Users don&apos;t care why
+          something broke; they care whether they can continue their task. By building with graceful degradation in
+          mind, you transform potential frustrations into minor hiccups.
+        </p>
+        <p>
+          The patterns in this article—strategic error boundaries, defensive data access, AsyncBoundary composition,
+          retry mechanisms, and comprehensive observability—form a toolkit for building UIs that earn user trust through
+          reliability.
+        </p>
+        <p>
+          Start small: add an error boundary to your next feature. Wrap that API call with proper error handling. Add
+          context to your error logs. Each improvement compounds, and over time, you&apos;ll build applications that
+          handle the unexpected with grace.
+        </p>
+      </section>
+    </>
+  );
+}
+
 const articleBySlug: Record<string, () => JSX.Element> = {
   "when-and-when-not-to-use-rtk-query": RtkQueryArticle,
+  "defensive-react-uis-that-never-break": DefensiveReactArticle,
   "hidden-cost-of-react-re-renders": ReconciliationPerformanceArticle,
   "mock-server-cut-blockers": () => (
     <div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-sm text-zinc-300">
